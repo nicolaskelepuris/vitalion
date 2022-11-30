@@ -7,9 +7,9 @@
 #   Character.create(name: "Luke", movie: movies.first)
 
 Card::Record.destroy_all
-Card.create(name: 'card 1', attack: 2, defense: 0)
-Card.create(name: 'card 2', attack: 5, defense: 0)
-Card.create(name: 'card 3', attack: 15, defense: 0)
-Card.create(name: 'card 4', attack: 0, defense: 1)
-Card.create(name: 'card 5', attack: 0, defense: 4)
-Card.create(name: 'card 6', attack: 0, defense: 7)
+Card::Record.create(name: 'card 1', attack: 2, defense: 0)
+Card::Record.create(name: 'card 2', attack: 5, defense: 0)
+Card::Record.create(name: 'card 3', attack: 15, defense: 0)
+Card::Record.create(name: 'card 4', attack: 0, defense: 1)
+Card::Record.create(name: 'card 5', attack: 0, defense: 4)
+Card::Record.create(name: 'card 6', attack: 0, defense: 7)
