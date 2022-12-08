@@ -3,7 +3,6 @@
 require 'rails_helper'
 
 RSpec.describe CardsController, type: :request do
-
   describe 'GET /cards' do
     before do
       ::Card::Record.create(name: 'card 1', attack: 2, defense: 0)
