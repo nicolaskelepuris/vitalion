@@ -1,6 +1,6 @@
 module Match
   class Model
-    def initialize(player_1_id:, observers:)
+    def initialize(player_1_id:, observers: [])
       @state_machine = StateMachine.new
 
       cards = ::Card::List.call
@@ -44,6 +44,44 @@ module Match
       return @player_1 if player_id == @player_2.id
 
       @player_2
+    end
+
+    def players_ids
+      [@player_1.id, @player_2.id]
+    end
+
+    def is_player_1?(id)
+      @player_1.id == id
+    end
+
+    def state
+      {
+        player_1: {
+          id: @player_1.id,
+          health: @player_1.health,
+          attack_turn: @state_machine.player_1_attack_turn?
+          defense_turn: @state_machine.player_1_defense_turn?
+        },
+        player_2: {
+          id: @player_2.id,
+          health: @player_2.health,
+          attack_turn: @state_machine.player_2_attack_turn?
+          defense_turn: @state_machine.player_2_defense_turn?
+        }
+      }
+    end
+
+    def player_state(id)      
+      attack_turn = id == player_1.id ? @state_machine.player_1_attack_turn? : @state_machine.player_2_attack_turn?
+      defense_turn = id == player_1.id ? @state_machine.player_1_defense_turn? : @state_machine.player_2_defense_turn?
+
+      {
+        id: @player_1.id,
+        health: @player_1.health,
+        cards: @player_1.cards,
+        attack_turn: attack_turn
+        defense_turn: defense_turn
+      }
     end
 
     private

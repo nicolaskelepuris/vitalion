@@ -1,31 +1,30 @@
 class GameChannel < ApplicationCable::Channel
-  Rooms = LobbyChannel::Rooms
+  include Broadcasting
+  include Matching
 
   def subscribed
-    cards = ::Card::List.call
-    current_player[:cards] = cards.sample(5).map { |c| c.as_json(only: [:id, :name, :attack, :defense]) }
-    current_player[:in_game] = true
-    ActionCable.server.broadcast("notifications_#{current_user}", { data: { cards: current_player[:cards] } })
-
-    if @@rooms[params[:password]].all? { |player| player[:in_game] }
-      random_player = @@rooms[params[:password]].sample
-      random_player[:attacker] = true
-      ActionCable.server.broadcast("room_#{params[:password]}", { data: { attacker: random_player[:id] } })
-    end
+    private_broadcast({ data: match.player_state(current_user) })
   end
 
   def receive(data)
-    cards = data[:cards]
-    if current_player[:attacker]
-      valid_cards = Card.where(id: cards).where("attack > ?", 0)
+    if data[:attack]
+      match.attack(player_id: current_user, cards: data[:cards])
     else
-      valid_cards = Card.where(id: cards).where("defense > ?", 0)
+      match.defend(player_id: current_user, cards: data[:cards])
     end
+  end
+
+  def self.end_turn(match)
+    match.players_ids.each do |id|
+      private_broadcast_to(id, match.player_state(id))
+    end
+    
+    match_broadcast(params[:password], { data: match.state })
   end
 
   private
 
-  def current_player
-    @player ||= @@rooms[params[:password]].first { |player| player[:id] == current_user }
+  def match
+    @match ||= find_match(params[:password])
   end
 end

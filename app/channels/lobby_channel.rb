@@ -1,21 +1,34 @@
 class LobbyChannel < ApplicationCable::Channel
-  Rooms = {}
+  include Broadcasting
+  include Matching
 
   def subscribed
-    @@rooms[params[:password]] = [] unless @@rooms.include_key? params[:password]
+    stream_from private_broadcasting
 
-    stream_from "notifications_#{current_user}"
-
-    if @@rooms[params[:password]].length >= 2
-      ActionCable.server.broadcast("notifications_#{current_user}", { error: "This room is full" })
-
+    if Matches.include_key? params[:password]
+      match.join(player_id: current_user)
+    rescue StandardError => e
+      private_broadcast({ error: e.message })
       return
+    else
+      create_match(params[:password], ::Match::Model.new(player_1_id: current_user, observers: ::GameChannel))
     end
 
-    ActionCable.server.broadcast("notifications_#{current_user}", { data: { current_user: current_user } })
+    private_broadcast({ data: { current_user_id: current_user } })
 
-    @@rooms[params[:password]] << { id: current_user }
-    stream_from "room_#{params[:password]}"
-    ActionCable.server.broadcast("room_#{params[:password]}", { data: { players: @@rooms[params[:password]].pluck(:id) } })
+    stream_from match_broadcasting(params[:password])
+  end
+
+  def receive(data)
+    return unless data[:start_match] && match.is_player_1?(current_user)
+
+    match.start
+    match_broadcast(params[:password], { data: match.state })
+  end
+
+  private
+
+  def match
+    @match ||= find_match(params[:password])
   end
 end
