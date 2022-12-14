@@ -16,14 +16,10 @@ module Match
       @state_machine.second_player_join
     end
 
-    def start
-      return StandardError, "Can't start the match" unless @state_machine.may_start_match?
+    def start(id)
+      return StandardError, "Can't start the match" unless @state_machine.may_start_match? && id == @player_1.id
 
       @state_machine.start_match
-
-      return @player_1 if @state_machine.player_1_attack_turn?
-
-      @player_2
     end
 
     def attack(player_id:, cards:)
@@ -50,37 +46,22 @@ module Match
       [@player_1.id, @player_2.id]
     end
 
-    def is_player_1?(id)
-      @player_1.id == id
-    end
-
-    def state
+    def state(id)
       {
         player_1: {
           id: @player_1.id,
           health: @player_1.health,
-          attack_turn: @state_machine.player_1_attack_turn?
-          defense_turn: @state_machine.player_1_defense_turn?
+          attack_turn: @state_machine.player_1_attack_turn?,
+          defense_turn: @state_machine.player_1_defense_turn?,
+          cards: id == @player_1.id ? @player_1.cards : nil
         },
         player_2: {
           id: @player_2.id,
           health: @player_2.health,
-          attack_turn: @state_machine.player_2_attack_turn?
-          defense_turn: @state_machine.player_2_defense_turn?
+          attack_turn: @state_machine.player_2_attack_turn?,
+          defense_turn: @state_machine.player_2_defense_turn?,
+          cards: id == @player_2.id ? @player_2.cards : nil
         }
-      }
-    end
-
-    def player_state(id)      
-      attack_turn = id == player_1.id ? @state_machine.player_1_attack_turn? : @state_machine.player_2_attack_turn?
-      defense_turn = id == player_1.id ? @state_machine.player_1_defense_turn? : @state_machine.player_2_defense_turn?
-
-      {
-        id: @player_1.id,
-        health: @player_1.health,
-        cards: @player_1.cards,
-        attack_turn: attack_turn
-        defense_turn: defense_turn
       }
     end
 

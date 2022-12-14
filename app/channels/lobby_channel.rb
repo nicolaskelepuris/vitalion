@@ -20,10 +20,11 @@ class LobbyChannel < ApplicationCable::Channel
   end
 
   def receive(data)
-    return unless data[:start_match] && match.is_player_1?(current_user)
+    return unless data[:start_match]
 
-    match.start
-    match_broadcast(params[:password], { data: match.state })
+    match.start(current_user)
+  rescue StandardError => e
+    private_broadcast({ error: e.message })
   end
 
   private
