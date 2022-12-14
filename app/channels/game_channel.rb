@@ -22,6 +22,10 @@ class GameChannel < ApplicationCable::Channel
     end
   end
 
+  def self.end_attack_or_defense(attack: nil, defense: nil)
+    match_broadcast(params[:password], { data: { current_attack: attack, current_defense: defense } })
+  end
+
   private
 
   def match

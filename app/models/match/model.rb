@@ -91,6 +91,7 @@ module Match
 
     def create_attack(player:, cards:)
       player.current_attack = player.cards.select { |card| cards.include?(card.id) && card.attack > 0 }.uniq
+      @observers.each { |o| o.end_attack_or_defense(attack: player.current_attack) }
     end
 
     def player_1_defend(cards)
@@ -131,6 +132,7 @@ module Match
 
     def create_defense(player:, cards:)
       player.current_defense = player.cards.select { |card| cards.include?(card.id) && card.defense > 0 }.uniq
+      @observers.each { |o| o.end_attack_or_defense(defense: player.current_defense) }
     end
 
     def process_damage(attacker:, defender:)

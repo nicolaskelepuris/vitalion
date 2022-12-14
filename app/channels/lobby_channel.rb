@@ -11,7 +11,7 @@ class LobbyChannel < ApplicationCable::Channel
       private_broadcast({ error: e.message })
       return
     else
-      create_match(params[:password], ::Match::Model.new(player_1_id: current_user, observers: ::GameChannel))
+      create_match(params[:password], ::Match::Model.new(player_1_id: current_user, observers: [::GameChannel]))
     end
 
     private_broadcast({ data: { current_user_id: current_user } })
