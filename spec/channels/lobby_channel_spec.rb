@@ -109,15 +109,16 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
         stub_connection current_user: second_player
         subscribe password: password
-      end
 
-      it 'starts the match' do
-        # Given
         stub_connection current_user: current_user
         subscribe password: password
+      end
 
+      subject(:start_match) { perform :start_match }
+
+      it 'starts the match' do
         # When
-        perform :start_match
+        start_match
 
         # Then
         match_state = Matches[password].state(current_user)
@@ -128,6 +129,12 @@ RSpec.describe ::LobbyChannel, type: :channel do
         expect(player_2[:defense_turn]).to eq(false)
 
         expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
+      end
+
+      it 'broadcasts to players that match started' do
+        expect { start_match }
+          .to have_broadcasted_to("match_#{password}")
+          .with(data: { start_match: true })
       end
     end
   end

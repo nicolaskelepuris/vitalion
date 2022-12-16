@@ -20,6 +20,7 @@ class LobbyChannel < ApplicationCable::Channel
 
   def start_match
     match.start(current_user)
+    match_broadcast(params[:password], { data: { start_match: true } })
   rescue StandardError => e
     private_broadcast({ error: e.message })
   end
