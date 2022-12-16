@@ -1,5 +1,5 @@
 module Match
-  class StateMachine < ApplicationRecord
+  class StateMachine
     include AASM
 
     aasm whiny_transitions: false do

@@ -3,16 +3,15 @@ module Match
     def initialize(player_1_id:, observers: [])
       @state_machine = StateMachine.new
 
-      cards = ::Card::List.call
-      @player_1 = Player::Model.new(id: player_1_id, cards: cards.sample(5))
-      @player_2 = Player::Model.new(cards: cards.sample(5))
+      @cards = ::Card::List.call
+      @player_1 = ::Player::Model.new(id: player_1_id, cards: @cards.sample(5))
       @observers = observers
     end
 
     def join(player_id:)
       return StandardError, 'The match is full' unless @state_machine.may_second_player_join?
 
-      @player_2.id = player_id
+      @player_2 = ::Player::Model.new(id: player_id, cards: @cards.sample(5))
       @state_machine.second_player_join
     end
 
@@ -37,7 +36,7 @@ module Match
     def disconnect(player_id:)
       @state_machine.finish
 
-      return @player_1 if player_id == @player_2.id
+      return @player_1 if player_id == @player_2&.id
 
       @player_2
     end
@@ -56,11 +55,11 @@ module Match
           cards: id == @player_1.id ? @player_1.cards : nil
         },
         player_2: {
-          id: @player_2.id,
-          health: @player_2.health,
+          id: @player_2&.id,
+          health: @player_2&.health,
           attack_turn: @state_machine.player_2_attack_turn?,
           defense_turn: @state_machine.player_2_defense_turn?,
-          cards: id == @player_2.id ? @player_2.cards : nil
+          cards: id == @player_2&.id ? @player_2.cards : nil
         }
       }
     end
@@ -149,8 +148,6 @@ module Match
     end
 
     def refill_cards
-      cards = ::Card::List.call
-
       if @state_machine.player_1_defense_turn?
         @player1.cards -= @player_1.current_defense
         player_1_cards_count = @player_1.current_defense
@@ -165,8 +162,8 @@ module Match
         player_2_cards_count = @player_2.current_defense.count
       end
 
-      @player_1.cards.push(*cards.sample(player_1_cards_count))
-      @player_2.cards.push(*cards.sample(player_2_cards_count))
+      @player_1.cards.push(*@cards.sample(player_1_cards_count))
+      @player_2.cards.push(*@cards.sample(player_2_cards_count))
     end
 
     def clear_turn

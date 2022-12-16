@@ -5,11 +5,8 @@ class LobbyChannel < ApplicationCable::Channel
   def subscribed
     stream_from private_broadcasting
 
-    if Matches.include_key? params[:password]
+    if Matches.key? params[:password]
       match.join(player_id: current_user)
-    rescue StandardError => e
-      private_broadcast({ error: e.message })
-      return
     else
       create_match(params[:password], ::Match::Model.new(player_1_id: current_user, observers: [::GameChannel]))
     end
@@ -17,6 +14,8 @@ class LobbyChannel < ApplicationCable::Channel
     private_broadcast({ data: { current_user_id: current_user } })
 
     stream_from match_broadcasting(params[:password])
+  rescue StandardError => e
+    private_broadcast({ error: e.message })
   end
 
   def receive(data)

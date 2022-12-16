@@ -1,6 +1,6 @@
-module Matching
-  Matches = {}
+Matches = {}
 
+module Matching
   def find_match(password)
     Matches[params[:password]]
   end
