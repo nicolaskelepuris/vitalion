@@ -18,9 +18,7 @@ class LobbyChannel < ApplicationCable::Channel
     private_broadcast({ error: e.message })
   end
 
-  def receive(data)
-    return unless data[:start_match]
-
+  def start_match
     match.start(current_user)
   rescue StandardError => e
     private_broadcast({ error: e.message })
