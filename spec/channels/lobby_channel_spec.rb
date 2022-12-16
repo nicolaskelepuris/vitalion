@@ -91,7 +91,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
         it 'sends current user id to user' do
           expect { subscribe_to_lobby }
             .to have_broadcasted_to("notifications_#{current_user}")
-            .with(data: { current_user_id: current_user })
+            .with(method: 'joined_lobby', data: { current_user_id: current_user })
         end
       end
     end
@@ -134,7 +134,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
       it 'broadcasts to players that match started' do
         expect { start_match }
           .to have_broadcasted_to("match_#{password}")
-          .with(data: { start_match: true })
+          .with(method: 'match_started')
       end
     end
   end
