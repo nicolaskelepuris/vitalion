@@ -9,14 +9,14 @@ module Match
     end
 
     def join(player_id:)
-      return StandardError, 'The match is full' unless @state_machine.may_second_player_join?
+      raise StandardError, 'The match is full' unless @state_machine.may_second_player_join?
 
       @player_2 = ::Player::Model.new(id: player_id, cards: @cards.sample(5))
       @state_machine.second_player_join
     end
 
     def start(id)
-      return StandardError, "Can't start the match" unless @state_machine.may_start_match? && id == @player_1.id
+      raise StandardError, "Can't start the match" unless @state_machine.may_start_match? && id == @player_1.id
 
       @state_machine.start_match
     end
@@ -67,7 +67,7 @@ module Match
     private
 
     def player_1_attack(cards)
-      return StandardError, "Can't attack now" unless @state_machine.may_player_1_attack?
+      raise StandardError, "Can't attack now" unless @state_machine.may_player_1_attack?
 
       create_attack(player: @player_1, cards: cards)
 
@@ -78,7 +78,7 @@ module Match
     end
 
     def player_2_attack(cards)
-      return StandardError, "Can't attack now" unless @state_machine.may_player_2_attack?
+      raise StandardError, "Can't attack now" unless @state_machine.may_player_2_attack?
 
       create_attack(player: @player_2, cards: cards)
 
@@ -94,7 +94,7 @@ module Match
     end
 
     def player_1_defend(cards)
-      return StandardError, "Can't defend now" unless @state_machine.may_player_1_defend?
+      raise StandardError, "Can't defend now" unless @state_machine.may_player_1_defend?
 
       create_defense(player: @player_1, cards: cards)
 
@@ -112,7 +112,7 @@ module Match
     end
 
     def player_2_defend(cards)
-      return StandardError, "Can't defend now" unless @state_machine.may_player_2_defend?
+      raise StandardError, "Can't defend now" unless @state_machine.may_player_2_defend?
 
       create_defense(player: @player_2, cards: cards)
 
