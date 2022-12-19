@@ -24,74 +24,107 @@ RSpec.describe ::LobbyChannel, type: :channel do
       subject(:subscribe_to_lobby) { subscribe password: 'any password' }
 
       context 'when no match with provided password exists' do
-        it 'subscribes' do
-          subscribe_to_lobby
+        context 'when player is first player' do
+          it 'subscribes' do
+            subscribe_to_lobby
+    
+            expect(subscription).to be_confirmed
+            expect(subscription).to have_stream_from("notifications_#{current_user}")
+            expect(subscription).to have_stream_from("match_#{password}")
+          end
   
-          expect(subscription).to be_confirmed
-          expect(subscription).to have_stream_from("notifications_#{current_user}")
-          expect(subscription).to have_stream_from("match_#{password}")
+          it 'created match contains player 1' do
+            # When
+            subscribe_to_lobby
+  
+            # Then
+            match = Matches[password]
+            player_1_cards = match.state(current_user)[:player_1][:cards]
+  
+            expect(::Card::Record.pluck(:id)).to include(*player_1_cards.pluck(:id))
+            expect(player_1_cards.length).to eq(5)
+  
+            expect(match.state(current_user))
+              .to include(
+                player_1: include(
+                  cards: be_a(::Array),
+                  attack_turn: false,
+                  defense_turn: false,
+                  health: 100,
+                  id: current_user
+                ),
+                player_2: {
+                  cards: nil,
+                  attack_turn: false,
+                  defense_turn: false,
+                  health: nil,
+                  id: nil
+                }
+              )
+          end
+  
+          it 'sends current user id to user' do
+            expect { subscribe_to_lobby }
+              .to have_broadcasted_to("notifications_#{current_user}")
+              .with(method: 'joined_lobby', data: { current_user_id: current_user })
+          end
         end
 
-        it 'creates a match' do
-          expect { subscribe_to_lobby  }.to change { Matches.length }.by(1)
+        context 'when player is second player' do
+          let(:first_player) { SecureRandom.uuid }
 
-          match = Matches[password]
-          player_1_cards = match.state(current_user)[:player_1][:cards]
-          expect(::Card::Record.pluck(:id)).to include(*player_1_cards.pluck(:id))
-          expect(player_1_cards.length).to eq(5)
-          expect(match.state(current_user))
-            .to include(
-              player_1: include(
-                cards: be_a(::Array),
-                attack_turn: false,
-                defense_turn: false,
-                health: 100,
-                id: current_user
-              ),
-              player_2: {
-                cards: nil,
-                attack_turn: false,
-                defense_turn: false,
-                health: nil,
-                id: nil
-              }
-            )
-        end
+          before do
+            stub_connection current_user: first_player
+            subscribe password: password
 
-        it 'created match contains player 1' do
-          # When
-          subscribe_to_lobby
+            stub_connection current_user: current_user
+          end
 
-          # Then
-          match = Matches[password]
-          player_1_cards = match.state(current_user)[:player_1][:cards]
+          it 'subscribes' do
+            # When  
+            subscribe_to_lobby
+  
+            # Then
+            expect(subscription).to be_confirmed
+            expect(subscription).to have_stream_from("notifications_#{current_user}")
+            expect(subscription).to have_stream_from("match_#{password}")
+          end
 
-          expect(::Card::Record.pluck(:id)).to include(*player_1_cards.pluck(:id))
-          expect(player_1_cards.length).to eq(5)
+          it 'created match contains players' do
+            # When
+            subscribe_to_lobby
+  
+            # Then
+            match = Matches[password]
+            player_2_cards = match.state(current_user)[:player_2][:cards]
+  
+            expect(::Card::Record.pluck(:id)).to include(*player_2_cards.pluck(:id))
+            expect(player_2_cards.length).to eq(5)
+  
+            expect(match.state(current_user))
+              .to include(
+                player_1: eq(
+                  cards: nil,
+                  attack_turn: false,
+                  defense_turn: false,
+                  health: 100,
+                  id: first_player
+                ),
+                player_2: include(
+                  cards: be_a(::Array),
+                  attack_turn: false,
+                  defense_turn: false,
+                  health: 100,
+                  id: current_user
+                )
+              )
+          end
 
-          expect(match.state(current_user))
-            .to include(
-              player_1: include(
-                cards: be_a(::Array),
-                attack_turn: false,
-                defense_turn: false,
-                health: 100,
-                id: current_user
-              ),
-              player_2: {
-                cards: nil,
-                attack_turn: false,
-                defense_turn: false,
-                health: nil,
-                id: nil
-              }
-            )
-        end
-
-        it 'sends current user id to user' do
-          expect { subscribe_to_lobby }
-            .to have_broadcasted_to("notifications_#{current_user}")
-            .with(method: 'joined_lobby', data: { current_user_id: current_user })
+          it 'sends current user id to second player' do
+            expect { subscribe_to_lobby }
+              .to have_broadcasted_to("notifications_#{current_user}")
+              .with(method: 'joined_lobby', data: { current_user_id: current_user })
+          end
         end
       end
     end
