@@ -35,6 +35,7 @@ RSpec.describe ::GameChannel, type: :channel do
   
           expect(subscription).to be_confirmed
           expect(subscription).to have_stream_from("match_#{password}")
+          expect(subscription).to have_stream_from("notifications_#{current_user}")
         end
       end
 
@@ -46,6 +47,7 @@ RSpec.describe ::GameChannel, type: :channel do
   
           expect(subscription).to be_confirmed
           expect(subscription).to have_stream_from("match_#{password}")
+          expect(subscription).to have_stream_from("notifications_#{player_2}")
         end
       end
     end

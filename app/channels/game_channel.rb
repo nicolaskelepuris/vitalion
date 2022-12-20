@@ -5,6 +5,7 @@ class GameChannel < ApplicationCable::Channel
   def subscribed
     reject unless match.players_ids.include?(current_user)
 
+    stream_from private_broadcasting
     stream_from match_broadcasting(params[:password])
   end
 
