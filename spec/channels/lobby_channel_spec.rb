@@ -80,7 +80,8 @@ RSpec.describe ::LobbyChannel, type: :channel do
                   attack_turn: false,
                   defense_turn: false,
                   health: nil,
-                  id: nil
+                  id: nil,
+                  nickname: nil
                 }
               )
           end
@@ -123,14 +124,16 @@ RSpec.describe ::LobbyChannel, type: :channel do
                   attack_turn: false,
                   defense_turn: false,
                   health: 100,
-                  id: first_player
+                  id: first_player,
+                  nickname: first_player_nickname
                 ),
                 player_2: include(
                   cards: be_a(::Array),
                   attack_turn: false,
                   defense_turn: false,
                   health: 100,
-                  id: current_user
+                  id: current_user,
+                  nickname: nickname
                 )
               )
           end

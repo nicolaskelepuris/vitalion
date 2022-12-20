@@ -73,11 +73,13 @@ RSpec.describe ::GameChannel, type: :channel do
     describe 'success' do
       let(:password) { 'any password' }
       let(:current_user) { SecureRandom.uuid }
+      let(:current_user_nickname) { 'a good player 1 nickname' }
       let(:second_player) { SecureRandom.uuid }
+      let(:second_player_nickname) { 'player 2 nickname here' }
 
       before do
-        Matches[password] = ::Match::Model.new(player_1_id: current_user, observers: [::GameChannel])
-        Matches[password].join(player_id: second_player)
+        Matches[password] = ::Match::Model.new(player_1_id: current_user, player_1_nickname: current_user_nickname, observers: [::GameChannel])
+        Matches[password].join(player_id: second_player, player_nickname: second_player_nickname)
         Matches[password].start(current_user)
       end
 
@@ -92,32 +94,36 @@ RSpec.describe ::GameChannel, type: :channel do
         it 'returns match state' do
           expect { match_state }
             .to have_broadcasted_to("notifications_#{current_user}")
-            .with do |payload|
-              expect(payload[:method]).to eq('match_state')
-              expect(payload[:data])
-                .to include(
-                  player_1: include(
-                    cards: be_a(::Array),
-                    defense_turn: false,
-                    health: 100,
-                    id: current_user
-                  ),
-                  player_2: include(
-                    cards: nil,
-                    defense_turn: false,
-                    health: 100,
-                    id: second_player
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('end_turn')
+                expect(payload[:data])
+                  .to include(
+                      player_1: include(
+                      cards: be_a(::Array),
+                      defense_turn: false,
+                      health: 100,
+                      nickname: current_user_nickname,
+                      id: current_user
+                    ),
+                      player_2: include(
+                      cards: nil,
+                      defense_turn: false,
+                      health: 100,
+                      nickname: second_player_nickname,
+                      id: second_player
+                    )
                   )
-                )
-              
-              player_1 = payload[:data][:player_1]
-              player_2 = payload[:data][:player_2]
-              player_cards = player_1[:cards]
-    
-              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-              expect(player_cards.length).to eq(5)
-              expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
-            end         
+                
+                player_1 = payload[:data][:player_1]
+                player_2 = payload[:data][:player_2]
+                player_cards = player_1[:cards]
+      
+                expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+                expect(player_cards.length).to eq(5)
+                expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
+              end
+            )      
         end
       end
 
@@ -130,32 +136,36 @@ RSpec.describe ::GameChannel, type: :channel do
         it 'returns match state' do
           expect { match_state }
             .to have_broadcasted_to("notifications_#{second_player}")
-            .with do |payload|
-              expect(payload[:method]).to eq('match_state')
-              expect(payload[:data])
-                .to include(
-                  player_1: include(
-                    cards: nil,
-                    defense_turn: false,
-                    health: 100,
-                    id: current_user
-                  ),
-                  player_2: include(
-                    cards: be_a(::Array),
-                    defense_turn: false,
-                    health: 100,
-                    id: second_player
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('end_turn')
+                expect(payload[:data])
+                  .to include(
+                    player_1: include(
+                      cards: nil,
+                      defense_turn: false,
+                      health: 100,
+                      nickname: current_user_nickname,
+                      id: current_user
+                    ),
+                    player_2: include(
+                      cards: be_a(::Array),
+                      defense_turn: false,
+                      health: 100,
+                      nickname: second_player_nickname,
+                      id: second_player
+                    )
                   )
-                )
-              
-              player_1 = payload[:data][:player_1]
-              player_2 = payload[:data][:player_2]
-              player_cards = player_2[:cards]
-    
-              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-              expect(player_cards.length).to eq(5)
-              expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
-            end         
+                
+                player_1 = payload[:data][:player_1]
+                player_2 = payload[:data][:player_2]
+                player_cards = player_2[:cards]
+      
+                expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+                expect(player_cards.length).to eq(5)
+                expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
+              end
+            )      
         end
       end
     end

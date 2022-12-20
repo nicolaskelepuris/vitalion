@@ -56,6 +56,7 @@ module Match
       {
         player_1: {
           id: @player_1.id,
+          nickname: @player_1.nickname,
           health: @player_1.health,
           attack_turn: @state_machine.player_1_attack_turn?,
           defense_turn: @state_machine.player_1_defense_turn?,
@@ -63,6 +64,7 @@ module Match
         },
         player_2: {
           id: @player_2&.id,
+          nickname: @player_2&.nickname,
           health: @player_2&.health,
           attack_turn: @state_machine.player_2_attack_turn?,
           defense_turn: @state_machine.player_2_defense_turn?,
