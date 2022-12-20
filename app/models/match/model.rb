@@ -1,17 +1,17 @@
 module Match
   class Model
-    def initialize(player_1_id:, observers: [])
+    def initialize(player_1_id:, player_1_nickname: nil, observers: [])
       @state_machine = StateMachine.new
 
       @cards = ::Card::List.call
-      @player_1 = ::Player::Model.new(id: player_1_id, cards: @cards.sample(5))
+      @player_1 = ::Player::Model.new(id: player_1_id, nickname: player_1_nickname, cards: @cards.sample(5))
       @observers = observers
     end
 
-    def join(player_id:)
+    def join(player_id:, player_nickname: nil)
       raise StandardError, 'The match is full' unless @state_machine.may_second_player_join?
 
-      @player_2 = ::Player::Model.new(id: player_id, cards: @cards.sample(5))
+      @player_2 = ::Player::Model.new(id: player_id, nickname: player_nickname, cards: @cards.sample(5))
       @state_machine.second_player_join
     end
 
@@ -43,6 +43,13 @@ module Match
 
     def players_ids
       [@player_1.id, @player_2.id]
+    end
+
+    def enemy_nickname(id)
+      return @player_2.nickname if @player_1.id == id
+      return @player_1.nickname if @player_2.id == id
+
+      raise StandardError, "Can't find player"
     end
 
     def state(id)

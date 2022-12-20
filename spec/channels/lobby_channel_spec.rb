@@ -36,6 +36,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
     describe 'success' do
       let(:current_user) { SecureRandom.uuid }
       let(:password) { 'any password' }
+      let(:nickname) { 'a good nickname' }
 
       before do
         stub_connection current_user: current_user
@@ -43,7 +44,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
       end
 
 
-      subject(:join_lobby) { perform :join_lobby, password: password }
+      subject(:join_lobby) { perform :join_lobby, password: password, nickname: nickname }
 
       context 'when no match with provided password exists' do
         context 'when player is first player' do
@@ -93,11 +94,12 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
         context 'when player is second player' do
           let(:first_player) { SecureRandom.uuid }
+          let(:first_player_nickname) { 'a good first player nickname' }
 
           before do
             stub_connection current_user: first_player
             subscribe password: password
-            perform :join_lobby, password: password
+            perform :join_lobby, password: password, nickname: first_player_nickname
 
             stub_connection current_user: current_user
             subscribe password: password
@@ -138,9 +140,9 @@ RSpec.describe ::LobbyChannel, type: :channel do
               .to have_broadcasted_to("notifications_#{current_user}")
               .with(method: 'joined_lobby', data: { current_user_id: current_user })
               .and have_broadcasted_to("notifications_#{first_player}")
-              .with(method: 'waiting_to_start_match', data: { is_player_1: true })
+              .with(method: 'waiting_to_start_match', data: { is_player_1: true, enemy_nickname: nickname })
               .and have_broadcasted_to("notifications_#{current_user}")
-              .with(method: 'waiting_to_start_match', data: { is_player_1: false })
+              .with(method: 'waiting_to_start_match', data: { is_player_1: false, enemy_nickname: first_player_nickname })
           end
         end
       end
