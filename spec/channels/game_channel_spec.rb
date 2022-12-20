@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe ::GameChannel, type: :channel do
-  before(:all) do
+  before do
     Card::Record.create(name: 'card 1', attack: 2, defense: 0)
     Card::Record.create(name: 'card 2', attack: 5, defense: 0)
     Card::Record.create(name: 'card 3', attack: 15, defense: 0)

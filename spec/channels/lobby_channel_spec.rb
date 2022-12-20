@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe ::LobbyChannel, type: :channel do
-  before(:all) do
+  before do
     Card::Record.create(name: 'card 1', attack: 2, defense: 0)
     Card::Record.create(name: 'card 2', attack: 5, defense: 0)
     Card::Record.create(name: 'card 3', attack: 15, defense: 0)
@@ -140,9 +140,9 @@ RSpec.describe ::LobbyChannel, type: :channel do
               .to have_broadcasted_to("notifications_#{current_user}")
               .with(method: 'joined_lobby', data: { current_user_id: current_user })
               .and have_broadcasted_to("notifications_#{first_player}")
-              .with(method: 'waiting_to_start_match', data: { is_player_1: true, enemy_nickname: nickname })
+              .with(method: 'waiting_to_start_match', data: { is_player_1: true, enemy_nickname: nickname, enemy_id: current_user })
               .and have_broadcasted_to("notifications_#{current_user}")
-              .with(method: 'waiting_to_start_match', data: { is_player_1: false, enemy_nickname: first_player_nickname })
+              .with(method: 'waiting_to_start_match', data: { is_player_1: false, enemy_nickname: first_player_nickname, enemy_id: first_player })
           end
         end
       end

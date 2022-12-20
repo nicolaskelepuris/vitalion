@@ -12,15 +12,20 @@ class LobbyChannel < ApplicationCable::Channel
     if Matches.key? params[:password]
       match.join(player_id: current_user, player_nickname: data['nickname'])
 
-      player_1_id = match.state(current_user)[:player_1][:id]
+      match_state = match.state(current_user)
+      player_1_id = match_state[:player_1][:id]
+      player_2_id = match_state[:player_2][:id]
       match.players_ids.each do |id|
+        is_player_1 = id == player_1_id
+
         private_broadcast_to(
           id,
           {
             method: 'waiting_to_start_match',
             data: { 
-              is_player_1: id == player_1_id,
-              enemy_nickname: match.enemy_nickname(id) 
+              is_player_1: is_player_1,
+              enemy_nickname: match.enemy_nickname(id) ,
+              enemy_id: is_player_1 ? player_2_id : player_1_id
             }
           }
         )
