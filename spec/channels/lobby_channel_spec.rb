@@ -138,7 +138,9 @@ RSpec.describe ::LobbyChannel, type: :channel do
               .to have_broadcasted_to("notifications_#{current_user}")
               .with(method: 'joined_lobby', data: { current_user_id: current_user })
               .and have_broadcasted_to("notifications_#{first_player}")
-              .with(method: 'waiting_to_start_match')
+              .with(method: 'waiting_to_start_match', data: { is_player_1: true })
+              .and have_broadcasted_to("notifications_#{current_user}")
+              .with(method: 'waiting_to_start_match', data: { is_player_1: false })
           end
         end
       end

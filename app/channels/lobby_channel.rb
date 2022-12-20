@@ -13,7 +13,9 @@ class LobbyChannel < ApplicationCable::Channel
       match.join(player_id: current_user)
 
       player_1_id = match.state(current_user)[:player_1][:id]
-      private_broadcast_to(player_1_id, { method: 'waiting_to_start_match' })
+      match.players_ids.each do |id|
+        private_broadcast_to(id, { method: 'waiting_to_start_match', data: { is_player_1: id == player_1_id } })
+      end
     else
       create_match(params[:password], ::Match::Model.new(player_1_id: current_user, observers: [::GameChannel]))
     end
