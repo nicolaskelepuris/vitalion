@@ -66,4 +66,96 @@ RSpec.describe ::GameChannel, type: :channel do
       end
     end
   end
+
+  describe 'match_state' do
+    describe 'success' do
+      let(:password) { 'any password' }
+      let(:current_user) { SecureRandom.uuid }
+      let(:second_player) { SecureRandom.uuid }
+
+      before do
+        Matches[password] = ::Match::Model.new(player_1_id: current_user, observers: [::GameChannel])
+        Matches[password].join(player_id: second_player)
+        Matches[password].start(current_user)
+      end
+
+      subject(:match_state) { perform :match_state, password: password }
+
+      context 'when retrieving match state as player 1' do
+        before do
+          stub_connection current_user: current_user
+          subscribe password: password
+        end
+
+        it 'returns match state' do
+          expect { match_state }
+            .to have_broadcasted_to("notifications_#{current_user}")
+            .with do |payload|
+              expect(payload[:method]).to eq('match_state')
+              expect(payload[:data])
+                .to include(
+                  player_1: include(
+                    cards: be_a(::Array),
+                    defense_turn: false,
+                    health: 100,
+                    id: current_user
+                  ),
+                  player_2: include(
+                    cards: nil,
+                    defense_turn: false,
+                    health: 100,
+                    id: second_player
+                  )
+                )
+              
+              player_1 = payload[:data][:player_1]
+              player_2 = payload[:data][:player_2]
+              player_cards = player_1[:cards]
+    
+              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+              expect(player_cards.length).to eq(5)
+              expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
+            end         
+        end
+      end
+
+      context 'when retrieving match state as player 2' do
+        before do
+          stub_connection current_user: second_player
+          subscribe password: password
+        end
+
+        it 'returns match state' do
+          expect { match_state }
+            .to have_broadcasted_to("notifications_#{second_player}")
+            .with do |payload|
+              expect(payload[:method]).to eq('match_state')
+              expect(payload[:data])
+                .to include(
+                  player_1: include(
+                    cards: nil,
+                    defense_turn: false,
+                    health: 100,
+                    id: current_user
+                  ),
+                  player_2: include(
+                    cards: be_a(::Array),
+                    defense_turn: false,
+                    health: 100,
+                    id: second_player
+                  )
+                )
+              
+              player_1 = payload[:data][:player_1]
+              player_2 = payload[:data][:player_2]
+              player_cards = player_2[:cards]
+    
+              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+              expect(player_cards.length).to eq(5)
+              expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
+            end         
+        end
+      end
+    end
+  end
 end
