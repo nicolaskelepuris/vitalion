@@ -3,6 +3,7 @@ class GameChannel < ApplicationCable::Channel
   include Matching
 
   def subscribed
+    stream_from match_broadcasting(params[:password])
     private_broadcast({ data: match.state(current_user) })
   end
 

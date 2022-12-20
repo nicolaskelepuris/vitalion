@@ -23,19 +23,40 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
       subject(:subscribe_to_lobby) { subscribe password: 'any password' }
 
+      it 'subscribes' do
+        subscribe_to_lobby
+
+        expect(subscription).to be_confirmed
+        expect(subscription).to have_stream_from("notifications_#{current_user}")
+      end
+    end
+  end
+
+  describe 'join_lobby' do
+    describe 'success' do
+      let(:current_user) { SecureRandom.uuid }
+      let(:password) { 'any password' }
+
+      before do
+        stub_connection current_user: current_user
+        subscribe password: password
+      end
+
+
+      subject(:join_lobby) { perform :join_lobby, password: password }
+
       context 'when no match with provided password exists' do
         context 'when player is first player' do
-          it 'subscribes' do
-            subscribe_to_lobby
+          it 'joins match' do
+            join_lobby
     
             expect(subscription).to be_confirmed
             expect(subscription).to have_stream_from("notifications_#{current_user}")
-            expect(subscription).to have_stream_from("match_#{password}")
           end
   
           it 'created match contains player 1' do
             # When
-            subscribe_to_lobby
+            join_lobby
   
             # Then
             match = Matches[password]
@@ -64,7 +85,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
           end
   
           it 'sends current user id to user' do
-            expect { subscribe_to_lobby }
+            expect { join_lobby }
               .to have_broadcasted_to("notifications_#{current_user}")
               .with(method: 'joined_lobby', data: { current_user_id: current_user })
           end
@@ -76,23 +97,15 @@ RSpec.describe ::LobbyChannel, type: :channel do
           before do
             stub_connection current_user: first_player
             subscribe password: password
+            perform :join_lobby, password: password
 
             stub_connection current_user: current_user
-          end
-
-          it 'subscribes' do
-            # When  
-            subscribe_to_lobby
-  
-            # Then
-            expect(subscription).to be_confirmed
-            expect(subscription).to have_stream_from("notifications_#{current_user}")
-            expect(subscription).to have_stream_from("match_#{password}")
+            subscribe password: password
           end
 
           it 'created match contains players' do
             # When
-            subscribe_to_lobby
+            join_lobby
   
             # Then
             match = Matches[password]
@@ -121,9 +134,11 @@ RSpec.describe ::LobbyChannel, type: :channel do
           end
 
           it 'sends current user id to second player' do
-            expect { subscribe_to_lobby }
+            expect { join_lobby }
               .to have_broadcasted_to("notifications_#{current_user}")
               .with(method: 'joined_lobby', data: { current_user_id: current_user })
+              .and have_broadcasted_to("notifications_#{first_player}")
+              .with(method: 'waiting_to_start_match')
           end
         end
       end
@@ -139,15 +154,17 @@ RSpec.describe ::LobbyChannel, type: :channel do
       before do
         stub_connection current_user: current_user
         subscribe password: password
+        perform :join_lobby, password: password
 
         stub_connection current_user: second_player
         subscribe password: password
+        perform :join_lobby, password: password
 
         stub_connection current_user: current_user
         subscribe password: password
       end
 
-      subject(:start_match) { perform :start_match }
+      subject(:start_match) { perform :start_match, password: password }
 
       it 'starts the match' do
         # When
@@ -166,7 +183,9 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
       it 'broadcasts to players that match started' do
         expect { start_match }
-          .to have_broadcasted_to("match_#{password}")
+          .to have_broadcasted_to("notifications_#{current_user}")
+          .with(method: 'match_started')
+          .and have_broadcasted_to("notifications_#{second_player}")
           .with(method: 'match_started')
       end
     end
