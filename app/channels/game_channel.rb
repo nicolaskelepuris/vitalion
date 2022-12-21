@@ -10,7 +10,7 @@ class GameChannel < ApplicationCable::Channel
   end
 
   def match_state
-    send_match_state
+    send_match_state(match, 'end_round')
   end
 
   def attack(data)
@@ -25,12 +25,12 @@ class GameChannel < ApplicationCable::Channel
     private_broadcast({ method: 'defense_turn', error: e.message })
   end
 
-  def self.end_turn(match)
-    send_match_state
+  def self.end_round(match)
+    send_match_state(match, 'end_round')
   end
 
-  def self.end_attack_or_defense(attack: nil, defense: nil)
-    match_broadcast(params[:password], { method: 'update_current_play', data: { current_attack: attack, current_defense: defense } })
+  def self.end_turn(match)
+    send_match_state(match, 'end_turn')
   end
 
   private
@@ -39,9 +39,9 @@ class GameChannel < ApplicationCable::Channel
     find_match(params[:password])
   end
 
-  def send_match_state
+  def send_match_state(match, method)
     match.players_ids.each do |id|
-      private_broadcast_to(id, { method: 'end_turn', data: match.state(id) })
+      private_broadcast_to(id, { method: method, data: match.state(id) })
     end
   end
 end

@@ -96,7 +96,7 @@ RSpec.describe ::GameChannel, type: :channel do
             .to have_broadcasted_to("notifications_#{current_user}")
             .with(
               lambda do |payload|
-                expect(payload[:method]).to eq('end_turn')
+                expect(payload[:method]).to eq('end_round')
                 expect(payload[:data])
                   .to include(
                       player_1: include(
@@ -138,7 +138,7 @@ RSpec.describe ::GameChannel, type: :channel do
             .to have_broadcasted_to("notifications_#{second_player}")
             .with(
               lambda do |payload|
-                expect(payload[:method]).to eq('end_turn')
+                expect(payload[:method]).to eq('end_round')
                 expect(payload[:data])
                   .to include(
                     player_1: include(

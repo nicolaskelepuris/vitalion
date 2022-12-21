@@ -80,10 +80,15 @@ module Match
 
       create_attack(player: @player_1, cards: cards)
 
-      return @state_machine.player_1_attack unless @player_1.current_attack.empty?
+      if @player_1.current_attack.empty?
+        end_round
 
-      end_turn
-      @state_machine.player_1_skip_attack
+        @state_machine.player_1_skip_attack
+      else
+        end_turn
+
+        @state_machine.player_1_attack
+      end
     end
 
     def player_2_attack(cards)
@@ -91,15 +96,23 @@ module Match
 
       create_attack(player: @player_2, cards: cards)
 
-      return @state_machine.player_2_attack unless @player_2.current_attack.empty?
+      if @player_2.current_attack.empty?
+        end_round
 
-      end_turn
-      @state_machine.player_2_skip_attack
+        @state_machine.player_2_skip_attack
+      else
+        end_turn
+
+        @state_machine.player_2_attack
+      end
     end
 
     def create_attack(player:, cards:)
       player.current_attack = player.cards.select { |card| cards.include?(card.id) && card.attack > 0 }.uniq
-      @observers.each { |o| o.end_attack_or_defense(attack: player.current_attack) }
+    end
+
+    def end_turn
+      @observers.each { |o| o.end_turn(self) }
     end
 
     def player_1_defend(cards)
@@ -111,13 +124,11 @@ module Match
 
       if @player_1.dead?
         @state_machine.finish
-        
-        return @player_2
       else
-        end_turn
-
         @state_machine.player_1_defend
       end
+
+      end_round
     end
 
     def player_2_defend(cards)
@@ -129,18 +140,15 @@ module Match
 
       if @player_2.dead?
         @state_machine.finish
-
-        return @player_1
       else
-        end_turn
-
         @state_machine.player_2_defend
       end
+
+      end_round
     end
 
     def create_defense(player:, cards:)
       player.current_defense = player.cards.select { |card| cards.include?(card.id) && card.defense > 0 }.uniq
-      @observers.each { |o| o.end_attack_or_defense(defense: player.current_defense) }
     end
 
     def process_damage(attacker:, defender:)
@@ -150,10 +158,10 @@ module Match
       defender.receive_damage(attack - defense)
     end
 
-    def end_turn
+    def end_round
       refill_cards
+      @observers.each { |o| o.end_round(self) }
       clear_turn
-      @observers.each { |o| o.end_turn(self) }
     end
 
     def refill_cards
