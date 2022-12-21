@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Match
   class Model
     def initialize(player_1_id:, player_1_nickname: nil, observers: [])
@@ -26,7 +28,7 @@ module Match
 
       player_2_attack(cards)
     end
-    
+
     def defend(player_id:, cards:)
       return player_1_defend(cards) if player_id == @player_1.id
 
@@ -78,7 +80,7 @@ module Match
     def player_1_attack(cards)
       raise StandardError, "Can't attack now" unless @state_machine.may_player_1_attack?
 
-      create_attack(player: @player_1, cards: cards)
+      create_attack(player: @player_1, cards:)
 
       if @player_1.current_attack.empty?
         end_round
@@ -94,7 +96,7 @@ module Match
     def player_2_attack(cards)
       raise StandardError, "Can't attack now" unless @state_machine.may_player_2_attack?
 
-      create_attack(player: @player_2, cards: cards)
+      create_attack(player: @player_2, cards:)
 
       if @player_2.current_attack.empty?
         end_round
@@ -108,7 +110,7 @@ module Match
     end
 
     def create_attack(player:, cards:)
-      player.current_attack = player.cards.select { |card| cards.include?(card.id) && card.attack > 0 }.uniq
+      player.current_attack = player.cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
     end
 
     def end_turn
@@ -118,7 +120,7 @@ module Match
     def player_1_defend(cards)
       raise StandardError, "Can't defend now" unless @state_machine.may_player_1_defend?
 
-      create_defense(player: @player_1, cards: cards)
+      create_defense(player: @player_1, cards:)
 
       process_damage(attacker: @player_2, defender: @player_1)
 
@@ -134,7 +136,7 @@ module Match
     def player_2_defend(cards)
       raise StandardError, "Can't defend now" unless @state_machine.may_player_2_defend?
 
-      create_defense(player: @player_2, cards: cards)
+      create_defense(player: @player_2, cards:)
 
       process_damage(attacker: @player_1, defender: @player_2)
 
@@ -148,12 +150,12 @@ module Match
     end
 
     def create_defense(player:, cards:)
-      player.current_defense = player.cards.select { |card| cards.include?(card.id) && card.defense > 0 }.uniq
+      player.current_defense = player.cards.select { |card| cards.include?(card.id) && card.defense.positive? }.uniq
     end
 
     def process_damage(attacker:, defender:)
-      attack = attacker.current_attack.sum { |card| card.attack }
-      defense = defender.current_defense.sum { |card| card.defense }
+      attack = attacker.current_attack.sum(&:attack)
+      defense = defender.current_defense.sum(&:defense)
 
       defender.receive_damage(attack - defense)
     end
@@ -186,7 +188,7 @@ module Match
     def clear_turn
       @player_1.current_defense = []
       @player_1.current_attack = []
-      
+
       @player_2.current_defense = []
       @player_2.current_attack = []
     end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class LobbyChannel < ApplicationCable::Channel
   include Broadcasting
   include Matching
@@ -22,16 +24,18 @@ class LobbyChannel < ApplicationCable::Channel
           id,
           {
             method: 'waiting_to_start_match',
-            data: { 
-              is_player_1: is_player_1,
-              enemy_nickname: match.enemy_nickname(id) ,
+            data: {
+              is_player_1:,
+              enemy_nickname: match.enemy_nickname(id),
               enemy_id: is_player_1 ? player_2_id : player_1_id
             }
           }
         )
       end
     else
-      create_match(params[:password], ::Match::Model.new(player_1_id: current_user, player_1_nickname: data['nickname'], observers: [::GameChannel]))
+      create_match(params[:password],
+                   ::Match::Model.new(player_1_id: current_user, player_1_nickname: data['nickname'],
+                                      observers: [::GameChannel]))
     end
 
     private_broadcast({ method: 'joined_lobby', data: { current_user_id: current_user } })

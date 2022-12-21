@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Broadcasting
   def private_broadcast(data)
     ActionCable.server.broadcast(private_broadcasting, data)

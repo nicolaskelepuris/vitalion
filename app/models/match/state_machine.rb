@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Match
   class StateMachine
     include AASM
@@ -16,7 +18,7 @@ module Match
       end
 
       event :start_match do
-        transitions from: :waiting_to_start, to: [:player_1_attack_turn, :player_2_attack_turn].sample
+        transitions from: :waiting_to_start, to: %i[player_1_attack_turn player_2_attack_turn].sample
       end
 
       event :player_1_attack do

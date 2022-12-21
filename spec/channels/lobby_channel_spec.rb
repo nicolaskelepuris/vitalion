@@ -17,7 +17,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
     describe 'success' do
       let(:current_user) { SecureRandom.uuid }
 
-      before { stub_connection current_user: current_user }
+      before { stub_connection current_user: }
 
       let(:password) { 'any password' }
 
@@ -39,33 +39,32 @@ RSpec.describe ::LobbyChannel, type: :channel do
       let(:nickname) { 'a good nickname' }
 
       before do
-        stub_connection current_user: current_user
-        subscribe password: password
+        stub_connection(current_user:)
+        subscribe password:
       end
 
-
-      subject(:join_lobby) { perform :join_lobby, password: password, nickname: nickname }
+      subject(:join_lobby) { perform :join_lobby, password:, nickname: }
 
       context 'when no match with provided password exists' do
         context 'when player is first player' do
           it 'joins match' do
             join_lobby
-    
+
             expect(subscription).to be_confirmed
             expect(subscription).to have_stream_from("notifications_#{current_user}")
           end
-  
+
           it 'created match contains player 1' do
             # When
             join_lobby
-  
+
             # Then
             match = Matches[password]
             player_1_cards = match.state(current_user)[:player_1][:cards]
-  
+
             expect(::Card::Record.pluck(:id)).to include(*player_1_cards.pluck(:id))
             expect(player_1_cards.length).to eq(5)
-  
+
             expect(match.state(current_user))
               .to include(
                 player_1: include(
@@ -85,7 +84,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
                 }
               )
           end
-  
+
           it 'sends current user id to user' do
             expect { join_lobby }
               .to have_broadcasted_to("notifications_#{current_user}")
@@ -99,24 +98,24 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
           before do
             stub_connection current_user: first_player
-            subscribe password: password
-            perform :join_lobby, password: password, nickname: first_player_nickname
+            subscribe(password:)
+            perform(:join_lobby, password:, nickname: first_player_nickname)
 
-            stub_connection current_user: current_user
-            subscribe password: password
+            stub_connection(current_user:)
+            subscribe password:
           end
 
           it 'created match contains players' do
             # When
             join_lobby
-  
+
             # Then
             match = Matches[password]
             player_2_cards = match.state(current_user)[:player_2][:cards]
-  
+
             expect(::Card::Record.pluck(:id)).to include(*player_2_cards.pluck(:id))
             expect(player_2_cards.length).to eq(5)
-  
+
             expect(match.state(current_user))
               .to include(
                 player_1: eq(
@@ -133,7 +132,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
                   defense_turn: false,
                   health: 100,
                   id: current_user,
-                  nickname: nickname
+                  nickname:
                 )
               )
           end
@@ -143,9 +142,23 @@ RSpec.describe ::LobbyChannel, type: :channel do
               .to have_broadcasted_to("notifications_#{current_user}")
               .with(method: 'joined_lobby', data: { current_user_id: current_user })
               .and have_broadcasted_to("notifications_#{first_player}")
-              .with(method: 'waiting_to_start_match', data: { is_player_1: true, enemy_nickname: nickname, enemy_id: current_user })
+              .with(
+                method: 'waiting_to_start_match',
+                data: {
+                  is_player_1: true,
+                  enemy_nickname: nickname,
+                  enemy_id: current_user
+                }
+              )
               .and have_broadcasted_to("notifications_#{current_user}")
-              .with(method: 'waiting_to_start_match', data: { is_player_1: false, enemy_nickname: first_player_nickname, enemy_id: first_player })
+              .with(
+                method: 'waiting_to_start_match',
+                data: {
+                  is_player_1: false,
+                  enemy_nickname: first_player_nickname,
+                  enemy_id: first_player
+                }
+              )
           end
         end
       end
@@ -159,19 +172,19 @@ RSpec.describe ::LobbyChannel, type: :channel do
       let(:second_player) { SecureRandom.uuid }
 
       before do
-        stub_connection current_user: current_user
-        subscribe password: password
-        perform :join_lobby, password: password
+        stub_connection(current_user:)
+        subscribe(password:)
+        perform(:join_lobby, password:)
 
         stub_connection current_user: second_player
-        subscribe password: password
-        perform :join_lobby, password: password
+        subscribe(password:)
+        perform(:join_lobby, password:)
 
-        stub_connection current_user: current_user
-        subscribe password: password
+        stub_connection(current_user:)
+        subscribe password:
       end
 
-      subject(:start_match) { perform :start_match, password: password }
+      subject(:start_match) { perform :start_match, password: }
 
       it 'starts the match' do
         # When

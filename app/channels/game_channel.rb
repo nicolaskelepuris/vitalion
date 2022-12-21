@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class GameChannel < ApplicationCable::Channel
   include Broadcasting
   include Matching
@@ -41,7 +43,7 @@ class GameChannel < ApplicationCable::Channel
 
   def send_match_state(match, method)
     match.players_ids.each do |id|
-      private_broadcast_to(id, { method: method, data: match.state(id) })
+      private_broadcast_to(id, { method:, data: match.state(id) })
     end
   end
 end
