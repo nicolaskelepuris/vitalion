@@ -11,8 +11,8 @@ class GameChannel < ApplicationCable::Channel
     stream_from match_broadcasting(params[:password])
   end
 
-  def match_state
-    send_match_state(match, 'end_round')
+  def start_round
+    send_match_state(match, 'start_round')
   end
 
   def attack(data)
@@ -27,12 +27,16 @@ class GameChannel < ApplicationCable::Channel
     private_broadcast({ method: 'defense_turn', error: e.message })
   end
 
-  def self.end_round(match)
-    send_match_state(match, 'end_round')
+  def self.end_attack_turn(match)
+    send_match_state(match, 'end_attack_turn')
   end
 
-  def self.end_turn(match)
-    send_match_state(match, 'end_turn')
+  def self.end_defense_turn(match)
+    send_match_state(match, 'end_defense_turn')
+  end
+
+  def self.end_round(match)
+    send_match_state(match, 'start_round')
   end
 
   private

@@ -83,14 +83,15 @@ module Match
       create_attack(player: @player_1, cards:)
 
       if @player_1.current_attack.empty?
-        end_round
-
         @state_machine.player_1_skip_attack
-      else
-        end_turn
 
-        @state_machine.player_1_attack
+        end_round
+        skip_turn
+        return
       end
+
+      @state_machine.player_1_attack
+      end_attack_turn
     end
 
     def player_2_attack(cards)
@@ -99,22 +100,31 @@ module Match
       create_attack(player: @player_2, cards:)
 
       if @player_2.current_attack.empty?
-        end_round
-
         @state_machine.player_2_skip_attack
-      else
-        end_turn
 
-        @state_machine.player_2_attack
+        end_round
+        skip_turn
+        return
       end
+
+      @state_machine.player_2_attack
+      end_attack_turn
     end
 
     def create_attack(player:, cards:)
       player.current_attack = player.cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
     end
 
-    def end_turn
-      @observers.each { |o| o.end_turn(self) }
+    def end_attack_turn
+      @observers.each { |o| o.end_attack_turn(self) }
+    end
+
+    def end_defense_turn
+      @observers.each { |o| o.end_defense_turn(self) }
+    end
+
+    def skip_turn
+      @observers.each { |o| o.end_round(self) }
     end
 
     def player_1_defend(cards)
@@ -130,6 +140,7 @@ module Match
         @state_machine.player_1_defend
       end
 
+      end_defense_turn
       end_round
     end
 
@@ -146,6 +157,7 @@ module Match
         @state_machine.player_2_defend
       end
 
+      end_defense_turn
       end_round
     end
 
@@ -162,7 +174,6 @@ module Match
 
     def end_round
       refill_cards
-      @observers.each { |o| o.end_round(self) }
       clear_turn
     end
 

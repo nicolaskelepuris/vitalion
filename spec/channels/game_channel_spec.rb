@@ -69,7 +69,7 @@ RSpec.describe ::GameChannel, type: :channel do
     end
   end
 
-  describe 'match_state' do
+  describe 'start_round' do
     describe 'success' do
       let(:password) { 'any password' }
       let(:current_user) { SecureRandom.uuid }
@@ -85,7 +85,7 @@ RSpec.describe ::GameChannel, type: :channel do
         Matches[password].start(current_user)
       end
 
-      subject(:match_state) { perform :match_state, password: }
+      subject(:start_round) { perform :start_round, password: }
 
       context 'when retrieving match state as player 1' do
         before do
@@ -94,11 +94,11 @@ RSpec.describe ::GameChannel, type: :channel do
         end
 
         it 'returns match state' do
-          expect { match_state }
+          expect { start_round }
             .to have_broadcasted_to("notifications_#{current_user}")
             .with(
               lambda do |payload|
-                expect(payload[:method]).to eq('end_round')
+                expect(payload[:method]).to eq('start_round')
                 expect(payload[:data])
                   .to include(
                     player_1: include(
@@ -136,11 +136,11 @@ RSpec.describe ::GameChannel, type: :channel do
         end
 
         it 'returns match state' do
-          expect { match_state }
+          expect { start_round }
             .to have_broadcasted_to("notifications_#{second_player}")
             .with(
               lambda do |payload|
-                expect(payload[:method]).to eq('end_round')
+                expect(payload[:method]).to eq('start_round')
                 expect(payload[:data])
                   .to include(
                     player_1: include(
