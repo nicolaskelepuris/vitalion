@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
 class LobbyChannel < ApplicationCable::Channel
-  include Broadcasting
   include Matching
 
   def subscribed
-    stream_from private_broadcasting
+    stream_from Broadcasting.private_broadcasting(current_user)
   end
 
   def join_lobby(data)
@@ -20,7 +19,7 @@ class LobbyChannel < ApplicationCable::Channel
       match.players_ids.each do |id|
         is_player_1 = id == player_1_id
 
-        private_broadcast_to(
+        Broadcasting.private_broadcast_to(
           id,
           {
             method: 'waiting_to_start_match',
@@ -38,18 +37,18 @@ class LobbyChannel < ApplicationCable::Channel
                                       observers: [::GameChannel]))
     end
 
-    private_broadcast({ method: 'joined_lobby', data: { current_user_id: current_user } })
+    Broadcasting.private_broadcast_to(current_user, { method: 'joined_lobby', data: { current_user_id: current_user } })
   rescue StandardError => e
-    private_broadcast({ method: 'joined_lobby', error: e.message })
+    Broadcasting.private_broadcast_to(current_user, { method: 'joined_lobby', error: e.message })
   end
 
   def start_match
     match.start(current_user)
     match.players_ids.each do |id|
-      private_broadcast_to(id, { method: 'match_started' })
+      Broadcasting.private_broadcast_to(id, { method: 'match_started' })
     end
   rescue StandardError => e
-    private_broadcast({ method: 'match_started', error: e.message })
+    Broadcasting.private_broadcast_to(current_user, { method: 'match_started', error: e.message })
   end
 
   private

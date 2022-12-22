@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
 module Broadcasting
-  def private_broadcast(data)
-    ActionCable.server.broadcast(private_broadcasting, data)
-  end
+  extend self
 
-  def private_broadcasting
-    "notifications_#{current_user}"
+  def private_broadcasting(id)
+    "notifications_#{id}"
   end
 
   def private_broadcast_to(id, data)
