@@ -3,12 +3,19 @@
 require 'rails_helper'
 
 RSpec.describe ::GameChannel, type: :channel do
-  before do
-    Card::Record.create(name: 'card 1', attack: 2, defense: 0)
-    Card::Record.create(name: 'card 2', attack: 5, defense: 0)
-    Card::Record.create(name: 'card 3', attack: 15, defense: 0)
-    Card::Record.create(name: 'card 4', attack: 0, defense: 1)
-    Card::Record.create(name: 'card 5', attack: 0, defense: 4)
+  let!(:attack_cards) do
+    [
+      Card::Record.create(name: 'card 1', attack: 2, defense: 0),
+      Card::Record.create(name: 'card 2', attack: 5, defense: 0),
+      Card::Record.create(name: 'card 3', attack: 15, defense: 0)
+    ]
+  end
+
+  let!(:defense_cards) do
+    [
+      Card::Record.create(name: 'card 4', attack: 0, defense: 1),
+      Card::Record.create(name: 'card 5', attack: 0, defense: 4)
+    ]
   end
 
   describe 'subscribe' do
@@ -180,8 +187,10 @@ RSpec.describe ::GameChannel, type: :channel do
       let(:second_player_nickname) { 'player 2 nickname here' }
       let(:is_player_1_attack_turn) do
         Matches[password] =
-          ::Match::Model.new(player_1_id: current_user, player_1_nickname: current_user_nickname,
+          ::Match::Model.new(player_1_id: current_user,
+                             player_1_nickname: current_user_nickname,
                              observers: [::GameChannel])
+
         Matches[password].join(player_id: second_player, player_nickname: second_player_nickname)
         Matches[password].start(current_user)
 
@@ -192,16 +201,16 @@ RSpec.describe ::GameChannel, type: :channel do
         is_player_1_attack_turn
       end
 
-      let(:attack_cards) { Card::Record.where('attack > 0').pluck(:id).sample(2) }
-      let(:defense_cards) { Card::Record.where('defense > 0').pluck(:id).sample(2) }
-      let(:used_cards) { Card::Record.where(id: attack_cards).map(&:as_json) }
+      let(:choosed_attack_cards_ids) { attack_cards.sample(2).pluck(:id) }
+      let(:choosed_defense_cards_ids) { defense_cards.sample(2).pluck(:id) }
+      let(:used_cards) { attack_cards.select { |c| choosed_attack_cards_ids.include? c.id }.map(&:as_json) }
 
       before do
         stub_connection(current_user: is_player_1_attack_turn ? current_user : second_player)
         subscribe password:
       end
 
-      subject(:attack) { perform :attack, cards: attack_cards + defense_cards }
+      subject(:attack) { perform :attack, cards: choosed_attack_cards_ids + choosed_defense_cards_ids }
 
       it 'returns match state to player one' do
         expect { attack }

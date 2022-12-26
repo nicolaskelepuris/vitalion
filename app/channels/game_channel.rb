@@ -17,7 +17,6 @@ class GameChannel < ApplicationCable::Channel
   def attack(data)
     match.attack(player_id: current_user, cards: data['cards'])
   rescue StandardError => e
-    puts "AOOOOOOOOOOOOOOOBA #{e.message}"
     Broadcasting.private_broadcast_to(current_user, { method: 'attack_turn', error: e.message })
   end
 
