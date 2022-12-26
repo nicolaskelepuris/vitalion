@@ -59,6 +59,12 @@ module Match
     end
 
     def state(id)
+      player_1_cards = id == @player_1.id ? @player_1.cards : nil      
+      player_1_using_cards = @player_1.current_attack + @player_1.current_defense
+
+      player_2_cards = id == @player_2&.id ? @player_2.cards : nil
+      player_2_using_cards = @player_2.present? ? @player_2.current_attack + @player_2.current_defense : []
+
       {
         player_1: {
           id: @player_1.id,
@@ -66,8 +72,8 @@ module Match
           health: @player_1.health,
           attack_turn: @state_machine.player_1_attack_turn?,
           defense_turn: @state_machine.player_1_defense_turn?,
-          cards: id == @player_1.id ? @player_1.cards : nil,
-          using_cards: @player_1.current_attack + @player_1.current_defense
+          cards: player_1_cards,
+          using_cards: player_1_using_cards
         },
         player_2: {
           id: @player_2&.id,
@@ -75,8 +81,8 @@ module Match
           health: @player_2&.health,
           attack_turn: @state_machine.player_2_attack_turn?,
           defense_turn: @state_machine.player_2_defense_turn?,
-          cards: id == @player_2&.id ? @player_2.cards : nil,
-          using_cards: @player_2.present? ? @player_2.current_attack + @player_2.current_defense : []
+          cards: player_2_cards,
+          using_cards: player_2_using_cards
         }
       }
     end
@@ -186,7 +192,7 @@ module Match
     def refill_cards
       if @state_machine.player_1_defense_turn?
         @player_1.cards -= @player_1.current_defense
-        player_1_cards_count = @player_1.current_defense
+        player_1_cards_count = @player_1.current_defense.count
 
         @player_2.cards -= @player_2.current_attack
         player_2_cards_count = [@player_2.current_attack.count, 1].max

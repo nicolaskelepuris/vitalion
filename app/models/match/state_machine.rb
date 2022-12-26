@@ -30,7 +30,7 @@ module Match
       end
 
       event :player_2_defend do
-        transitions from: :player_2_defense_turn, to: :player_1_attack_turn
+        transitions from: :player_2_defense_turn, to: :player_2_attack_turn
       end
 
       event :player_2_attack do
@@ -42,7 +42,7 @@ module Match
       end
 
       event :player_1_defend do
-        transitions from: :player_1_defense_turn, to: :player_2_attack_turn
+        transitions from: :player_1_defense_turn, to: :player_1_attack_turn
       end
 
       event :finish do

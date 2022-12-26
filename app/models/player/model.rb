@@ -13,5 +13,16 @@ module Player
       @current_attack = []
       @current_defense = []
     end
+
+    def receive_damage(damage)
+      return if damage.nil?
+      return unless damage.positive?
+
+      @health = [health - damage, 0].max
+    end
+
+    def dead?
+      @health.zero?
+    end
   end
 end

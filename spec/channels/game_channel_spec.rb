@@ -289,4 +289,126 @@ RSpec.describe ::GameChannel, type: :channel do
       end
     end
   end
+
+  describe 'defend' do
+    describe 'success' do
+      let(:password) { 'any password' }
+      let(:current_user) { SecureRandom.uuid }
+      let(:current_user_nickname) { 'a good player 1 nickname' }
+      let(:second_player) { SecureRandom.uuid }
+      let(:second_player_nickname) { 'player 2 nickname here' }
+      let(:first_attack_cards) { attack_cards }
+      let(:first_attack_cards_ids) { first_attack_cards.pluck(:id) }
+      let(:is_player_1_defense_turn) do
+        Matches[password] =
+          ::Match::Model.new(player_1_id: current_user,
+                             player_1_nickname: current_user_nickname,
+                             observers: [::GameChannel])
+
+        Matches[password].join(player_id: second_player, player_nickname: second_player_nickname)
+        Matches[password].start(current_user)
+
+        is_player_1_attack_turn = Matches[password].state(current_user)[:player_1][:attack_turn]
+        Matches[password].attack(
+          player_id: is_player_1_attack_turn ? current_user : second_player,
+          cards: first_attack_cards_ids
+        )
+
+        if is_player_1_attack_turn && Matches[password].state(current_user)[:player_1][:defense_turn]
+          raise StandardError, 'after player 1 attack should be player 2 defense turn'
+        end
+        if !is_player_1_attack_turn && Matches[password].state(current_user)[:player_2][:defense_turn]
+          raise StandardError, 'after player 2 attack should be player 1 defense turn'
+        end
+
+        !is_player_1_attack_turn
+      end
+
+      let(:choosed_attack_cards_ids) { attack_cards.sample(2).pluck(:id) }
+      let(:choosed_defense_cards_ids) { defense_cards.sample(2).pluck(:id) }
+      let(:used_cards) { defense_cards.select { |c| choosed_defense_cards_ids.include? c.id }.map(&:as_json) }
+
+      before do
+        stub_connection(current_user: is_player_1_defense_turn ? current_user : second_player)
+        subscribe password:
+      end
+
+      let(:turn_damage) { first_attack_cards.sum(&:attack) - defense_cards.select { |c| choosed_defense_cards_ids.include? c.id }.sum(&:defense) }
+      let(:health_after_defense) { 100 - turn_damage }
+
+      subject(:defend) { perform :defend, cards: choosed_attack_cards_ids + choosed_defense_cards_ids }
+
+      it 'returns match state to player one' do
+        expect { defend }
+          .to have_broadcasted_to("notifications_#{current_user}")
+          .with(
+            lambda do |payload|
+              expect(payload[:method]).to eq('end_defense_turn')
+              expect(payload[:data])
+                .to include(
+                  player_1: include(
+                    attack_turn: is_player_1_defense_turn ? true : false,
+                    defense_turn: false,
+                    health: is_player_1_defense_turn ? health_after_defense : 100,
+                    nickname: current_user_nickname,
+                    id: current_user,
+                    using_cards: match_array(is_player_1_defense_turn ? used_cards : first_attack_cards.map(&:as_json)),
+                    cards: be_a(::Array)
+                  ),
+                  player_2: include(
+                    attack_turn: is_player_1_defense_turn ? false : true,
+                    defense_turn: false,
+                    health: is_player_1_defense_turn ? 100 : health_after_defense,
+                    nickname: second_player_nickname,
+                    id: second_player,
+                    using_cards: match_array(is_player_1_defense_turn ? first_attack_cards.map(&:as_json) : used_cards),
+                    cards: nil
+                  )
+                )
+
+              player_cards = payload[:data][:player_1][:cards]
+
+              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+              expect(player_cards.length).to eq(5)
+            end
+          )
+      end
+
+      it 'returns match state to player two' do
+        expect { defend }
+          .to have_broadcasted_to("notifications_#{second_player}")
+          .with(
+            lambda do |payload|
+              expect(payload[:method]).to eq('end_defense_turn')
+              expect(payload[:data])
+                .to include(
+                  player_1: include(
+                    attack_turn: is_player_1_defense_turn ? true : false,
+                    defense_turn: false,
+                    health: is_player_1_defense_turn ? health_after_defense : 100,
+                    nickname: current_user_nickname,
+                    id: current_user,
+                    using_cards: match_array(is_player_1_defense_turn ? used_cards : first_attack_cards.map(&:as_json)),
+                    cards: nil
+                  ),
+                  player_2: include(
+                    attack_turn: is_player_1_defense_turn ? false : true,
+                    defense_turn: false,
+                    health: is_player_1_defense_turn ? 100 : health_after_defense,
+                    nickname: second_player_nickname,
+                    id: second_player,
+                    using_cards: match_array(is_player_1_defense_turn ? first_attack_cards.map(&:as_json) : used_cards),
+                    cards: be_a(::Array)
+                  )
+                )
+
+              player_cards = payload[:data][:player_2][:cards]
+
+              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+              expect(player_cards.length).to eq(5)
+            end
+          )
+      end
+    end
+  end
 end
