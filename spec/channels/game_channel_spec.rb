@@ -210,82 +210,164 @@ RSpec.describe ::GameChannel, type: :channel do
         subscribe password:
       end
 
-      subject(:attack) { perform :attack, cards: choosed_attack_cards_ids + choosed_defense_cards_ids }
+      subject(:attack) { perform :attack, cards: choosed_cards }
 
-      it 'returns match state to player one' do
-        expect { attack }
-          .to have_broadcasted_to("notifications_#{current_user}")
-          .with(
-            lambda do |payload|
-              expect(payload[:method]).to eq('end_attack_turn')
-              expect(payload[:data])
-                .to include(
-                  player_1: include(
-                    cards: be_a(::Array),
-                    attack_turn: false,
-                    health: 100,
-                    nickname: current_user_nickname,
-                    id: current_user,
-                    using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
-                  ),
-                  player_2: include(
-                    cards: nil,
-                    attack_turn: false,
-                    health: 100,
-                    nickname: second_player_nickname,
-                    id: second_player,
-                    using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
+      context 'when player attacks using 1 or more attack cards' do
+        let(:choosed_cards) { [choosed_attack_cards_ids, choosed_attack_cards_ids + choosed_defense_cards_ids].sample }
+
+        it 'returns match state to player one' do
+          expect { attack }
+            .to have_broadcasted_to("notifications_#{current_user}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('end_attack_turn')
+                expect(payload[:data])
+                  .to include(
+                    player_1: include(
+                      cards: be_a(::Array),
+                      attack_turn: false,
+                      health: 100,
+                      nickname: current_user_nickname,
+                      id: current_user,
+                      using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
+                    ),
+                    player_2: include(
+                      cards: nil,
+                      attack_turn: false,
+                      health: 100,
+                      nickname: second_player_nickname,
+                      id: second_player,
+                      using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
+                    )
                   )
-                )
-
-              player_1 = payload[:data][:player_1]
-              player_2 = payload[:data][:player_2]
-              player_cards = player_1[:cards]
-
-              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-              expect(player_cards.length).to eq(5)
-              expect(is_player_1_attack_turn ? player_2[:defense_turn] : player_1[:defense_turn]).to eq(true)
-              expect(is_player_1_attack_turn ? player_1[:defense_turn] : player_2[:defense_turn]).to eq(false)
-            end
-          )
+  
+                player_1 = payload[:data][:player_1]
+                player_2 = payload[:data][:player_2]
+                player_cards = player_1[:cards]
+  
+                expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+                expect(player_cards.length).to eq(5)
+                expect(is_player_1_attack_turn ? player_2[:defense_turn] : player_1[:defense_turn]).to eq(true)
+                expect(is_player_1_attack_turn ? player_1[:defense_turn] : player_2[:defense_turn]).to eq(false)
+              end
+            )
+        end
+  
+        it 'returns match state to player two' do
+          expect { attack }
+            .to have_broadcasted_to("notifications_#{second_player}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('end_attack_turn')
+                expect(payload[:data])
+                  .to include(
+                    player_1: include(
+                      cards: nil,
+                      attack_turn: false,
+                      health: 100,
+                      nickname: current_user_nickname,
+                      id: current_user,
+                      using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
+                    ),
+                    player_2: include(
+                      cards: be_a(::Array),
+                      attack_turn: false,
+                      health: 100,
+                      nickname: second_player_nickname,
+                      id: second_player,
+                      using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
+                    )
+                  )
+  
+                player_1 = payload[:data][:player_1]
+                player_2 = payload[:data][:player_2]
+                player_cards = player_2[:cards]
+  
+                expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+                expect(player_cards.length).to eq(5)
+                expect(is_player_1_attack_turn ? player_2[:defense_turn] : player_1[:defense_turn]).to eq(true)
+                expect(is_player_1_attack_turn ? player_1[:defense_turn] : player_2[:defense_turn]).to eq(false)
+              end
+            )
+        end
       end
+      
+      context 'when player attacks using 0 attack cards' do
+        let(:choosed_cards) { [choosed_defense_cards_ids, []].sample }
 
-      it 'returns match state to player two' do
-        expect { attack }
-          .to have_broadcasted_to("notifications_#{second_player}")
-          .with(
-            lambda do |payload|
-              expect(payload[:method]).to eq('end_attack_turn')
-              expect(payload[:data])
-                .to include(
-                  player_1: include(
-                    cards: nil,
-                    attack_turn: false,
-                    health: 100,
-                    nickname: current_user_nickname,
-                    id: current_user,
-                    using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
-                  ),
-                  player_2: include(
-                    cards: be_a(::Array),
-                    attack_turn: false,
-                    health: 100,
-                    nickname: second_player_nickname,
-                    id: second_player,
-                    using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
+        it 'returns match state to player one' do
+          expect { attack }
+            .to have_broadcasted_to("notifications_#{current_user}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('start_round')
+                expect(payload[:data])
+                  .to include(
+                    player_1: include(
+                      attack_turn: is_player_1_attack_turn ? false : true,
+                      defense_turn: false,
+                      health: 100,
+                      nickname: current_user_nickname,
+                      id: current_user,
+                      using_cards: match_array([]),
+                      cards: be_a(::Array)
+                    ),
+                    player_2: include(
+                      attack_turn: is_player_1_attack_turn ? true : false,
+                      defense_turn: false,
+                      health: 100,
+                      nickname: second_player_nickname,
+                      id: second_player,
+                      using_cards: match_array([]),
+                      cards: nil
+                    )
                   )
-                )
+  
+                player_cards = payload[:data][:player_1][:cards]  
+                expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
 
-              player_1 = payload[:data][:player_1]
-              player_2 = payload[:data][:player_2]
-              player_cards = player_2[:cards]
-
-              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-              expect(player_cards.length).to eq(5)
-              expect(is_player_1_attack_turn ? player_2[:defense_turn] : player_1[:defense_turn]).to eq(true)
-              expect(is_player_1_attack_turn ? player_1[:defense_turn] : player_2[:defense_turn]).to eq(false)
-            end
-          )
+                expected_cards_count = is_player_1_attack_turn ? 6 : 5
+                expect(player_cards.length).to eq(expected_cards_count)
+              end
+            )
+        end
+  
+        it 'returns match state to player two' do
+          expect { attack }
+            .to have_broadcasted_to("notifications_#{second_player}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('start_round')
+                expect(payload[:data])
+                  .to include(
+                    player_1: include(
+                      attack_turn: is_player_1_attack_turn ? false : true,
+                      defense_turn: false,
+                      health: 100,
+                      nickname: current_user_nickname,
+                      id: current_user,
+                      using_cards: match_array([]),
+                      cards: nil
+                    ),
+                    player_2: include(
+                      attack_turn: is_player_1_attack_turn ? true : false,
+                      defense_turn: false,
+                      health: 100,
+                      nickname: second_player_nickname,
+                      id: second_player,
+                      using_cards: match_array([]),
+                      cards: be_a(::Array)
+                    )
+                  )
+  
+                  player_cards = payload[:data][:player_2][:cards]  
+                  expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+  
+                  expected_cards_count = is_player_1_attack_turn ? 5 : 6
+                  expect(player_cards.length).to eq(expected_cards_count)
+              end
+            )
+        end
       end
     end
   end

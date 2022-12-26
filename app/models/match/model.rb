@@ -190,22 +190,28 @@ module Match
     end
 
     def refill_cards
-      if @state_machine.player_1_defense_turn?
+      if @state_machine.player_1_attack_turn?
+        player_1_refill_count = 0
+        player_2_refill_count = 1
+      elsif @state_machine.player_2_attack_turn?
+        player_1_refill_count = 1
+        player_2_refill_count = 0
+      elsif @state_machine.player_1_defense_turn?
         @player_1.cards -= @player_1.current_defense
-        player_1_cards_count = @player_1.current_defense.count
+        player_1_refill_count = @player_1.current_defense.count
 
         @player_2.cards -= @player_2.current_attack
-        player_2_cards_count = [@player_2.current_attack.count, 1].max
+        player_2_refill_count = @player_2.current_attack.count
       else
         @player_1.cards -= @player_1.current_attack
-        player_1_cards_count = [@player_1.current_attack.count, 1].max
+        player_1_refill_count = @player_1.current_attack.count
 
         @player_2.cards -= @player_2.current_defense
-        player_2_cards_count = @player_2.current_defense.count
+        player_2_refill_count = @player_2.current_defense.count
       end
 
-      @player_1.cards.push(*@cards.sample(player_1_cards_count))
-      @player_2.cards.push(*@cards.sample(player_2_cards_count))
+      @player_1.cards.push(*@cards.sample(player_1_refill_count))
+      @player_2.cards.push(*@cards.sample(player_2_refill_count))
     end
 
     def clear_turn
