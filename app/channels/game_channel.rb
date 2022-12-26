@@ -17,13 +17,13 @@ class GameChannel < ApplicationCable::Channel
   def attack(data)
     match.attack(player_id: current_user, cards: data['cards'])
   rescue StandardError => e
-    Broadcasting.private_broadcast_to(current_user, { method: 'attack_turn', error: e.message })
+    Broadcasting.private_broadcast_to(current_user, { method: 'end_attack_turn', error: e.message })
   end
 
   def defend(data)
     match.defend(player_id: current_user, cards: data['cards'])
   rescue StandardError => e
-    Broadcasting.private_broadcast_to(current_user, { method: 'defense_turn', error: e.message })
+    Broadcasting.private_broadcast_to(current_user, { method: 'end_defense_turn', error: e.message })
   end
 
   def self.end_attack_turn(match)
