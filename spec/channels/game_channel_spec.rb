@@ -217,7 +217,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     health: 100,
                     nickname: current_user_nickname,
                     id: current_user,
-                    using_cards: is_player_1_attack_turn ? used_cards : []
+                    using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
                   ),
                   player_2: include(
                     cards: nil,
@@ -225,7 +225,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     health: 100,
                     nickname: second_player_nickname,
                     id: second_player,
-                    using_cards: is_player_1_attack_turn ? [] : used_cards
+                    using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
                   )
                 )
 
@@ -255,7 +255,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     health: 100,
                     nickname: current_user_nickname,
                     id: current_user,
-                    using_cards: is_player_1_attack_turn ? used_cards : []
+                    using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
                   ),
                   player_2: include(
                     cards: be_a(::Array),
@@ -263,7 +263,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     health: 100,
                     nickname: second_player_nickname,
                     id: second_player,
-                    using_cards: is_player_1_attack_turn ? [] : used_cards
+                    using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
                   )
                 )
 
