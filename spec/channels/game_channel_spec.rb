@@ -226,6 +226,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_1: include(
                       cards: be_a(::Array),
                       attack_turn: false,
+                      defense_turn: is_player_1_attack_turn ? false : true,
                       health: 100,
                       nickname: current_user_nickname,
                       id: current_user,
@@ -234,6 +235,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_2: include(
                       cards: nil,
                       attack_turn: false,
+                      defense_turn: is_player_1_attack_turn ? true : false,
                       health: 100,
                       nickname: second_player_nickname,
                       id: second_player,
@@ -241,14 +243,15 @@ RSpec.describe ::GameChannel, type: :channel do
                     )
                   )
   
-                player_1 = payload[:data][:player_1]
-                player_2 = payload[:data][:player_2]
-                player_cards = player_1[:cards]
-  
-                expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-                expect(player_cards.length).to eq(5)
-                expect(is_player_1_attack_turn ? player_2[:defense_turn] : player_1[:defense_turn]).to eq(true)
-                expect(is_player_1_attack_turn ? player_1[:defense_turn] : player_2[:defense_turn]).to eq(false)
+                player_cards = payload[:data][:player_1][:cards]
+                
+                if is_player_1_attack_turn
+                  expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - choosed_attack_cards_ids)
+                  expect(player_cards.length).to eq(5 - choosed_attack_cards_ids.length)
+                else
+                  expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id))
+                  expect(player_cards.length).to eq(5)
+                end
               end
             )
         end
@@ -264,6 +267,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_1: include(
                       cards: nil,
                       attack_turn: false,
+                      defense_turn: is_player_1_attack_turn ? false : true,
                       health: 100,
                       nickname: current_user_nickname,
                       id: current_user,
@@ -272,6 +276,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_2: include(
                       cards: be_a(::Array),
                       attack_turn: false,
+                      defense_turn: is_player_1_attack_turn ? true : false,
                       health: 100,
                       nickname: second_player_nickname,
                       id: second_player,
@@ -279,14 +284,15 @@ RSpec.describe ::GameChannel, type: :channel do
                     )
                   )
   
-                player_1 = payload[:data][:player_1]
-                player_2 = payload[:data][:player_2]
-                player_cards = player_2[:cards]
-  
-                expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-                expect(player_cards.length).to eq(5)
-                expect(is_player_1_attack_turn ? player_2[:defense_turn] : player_1[:defense_turn]).to eq(true)
-                expect(is_player_1_attack_turn ? player_1[:defense_turn] : player_2[:defense_turn]).to eq(false)
+                player_cards = payload[:data][:player_2][:cards]
+
+                if is_player_1_attack_turn
+                  expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id))
+                  expect(player_cards.length).to eq(5)
+                else
+                  expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - choosed_attack_cards_ids)
+                  expect(player_cards.length).to eq(5 - choosed_attack_cards_ids.length)
+                end
               end
             )
         end
@@ -450,8 +456,13 @@ RSpec.describe ::GameChannel, type: :channel do
 
               player_cards = payload[:data][:player_1][:cards]
 
-              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-              expect(player_cards.length).to eq(5)
+              if is_player_1_defense_turn
+                expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - choosed_defense_cards_ids)
+                expect(player_cards.length).to eq(5 - choosed_defense_cards_ids.length)
+              else
+                expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - first_attack_cards_ids)
+                expect(player_cards.length).to eq(5 - first_attack_cards_ids.length)
+              end
             end
           )
       end
@@ -486,8 +497,13 @@ RSpec.describe ::GameChannel, type: :channel do
 
               player_cards = payload[:data][:player_2][:cards]
 
-              expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-              expect(player_cards.length).to eq(5)
+              if is_player_1_defense_turn
+                expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - first_attack_cards_ids)
+                expect(player_cards.length).to eq(5 - first_attack_cards_ids.length)
+              else
+                expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - choosed_defense_cards_ids)
+                expect(player_cards.length).to eq(5 - choosed_defense_cards_ids.length)
+              end
             end
           )
       end

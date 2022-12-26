@@ -125,6 +125,7 @@ module Match
 
     def create_attack(player:, cards:)
       player.current_attack = player.cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
+      player.cards -= player.current_attack
     end
 
     def end_attack_turn
@@ -175,6 +176,7 @@ module Match
 
     def create_defense(player:, cards:)
       player.current_defense = player.cards.select { |card| cards.include?(card.id) && card.defense.positive? }.uniq
+      player.cards -= player.current_defense
     end
 
     def process_damage(attacker:, defender:)
@@ -197,16 +199,10 @@ module Match
         player_1_refill_count = 1
         player_2_refill_count = 0
       elsif @state_machine.player_1_defense_turn?
-        @player_1.cards -= @player_1.current_defense
         player_1_refill_count = @player_1.current_defense.count
-
-        @player_2.cards -= @player_2.current_attack
         player_2_refill_count = @player_2.current_attack.count
       else
-        @player_1.cards -= @player_1.current_attack
         player_1_refill_count = @player_1.current_attack.count
-
-        @player_2.cards -= @player_2.current_defense
         player_2_refill_count = @player_2.current_defense.count
       end
 
