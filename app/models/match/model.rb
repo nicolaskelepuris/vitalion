@@ -24,7 +24,7 @@ module Match
     end
 
     def attack(player_id:, cards:)
-      cards = [] if cards.nil?
+      cards ||= []
 
       return player_1_attack(cards) if player_id == @player_1.id
 
