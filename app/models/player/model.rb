@@ -3,7 +3,6 @@
 module Player
   class Model
     attr_reader :id, :health, :nickname
-    attr_accessor :cards, :using_cards
 
     def initialize(cards:, id: nil, nickname: nil)
       @id = id
@@ -40,6 +39,14 @@ module Player
       @cards.push(*all_cards.sample(count_to_refill))
 
       @using_cards = []
+    end
+
+    def cards
+      @cards.dup
+    end
+
+    def using_cards
+      @using_cards.dup
     end
 
     private
