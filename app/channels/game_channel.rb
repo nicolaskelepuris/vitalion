@@ -35,7 +35,11 @@ class GameChannel < ApplicationCable::Channel
   end
 
   def self.end_round(match)
-    self.send_match_state(match, 'start_round')
+    return self.send_match_state(match, 'start_round') unless match.finished?
+
+    match.players_ids.each do |id|
+      Broadcasting.private_broadcast_to(id, { method: 'match_finished', data: { winner: match.winner } })
+    end
   end
 
   def self.send_match_state(match, method)

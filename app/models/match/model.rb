@@ -85,6 +85,18 @@ module Match
       }
     end
 
+    def finished?
+      @state_machine.finished?
+    end
+
+    def winner
+      return unless @state_machine.finished?
+
+      return @player_1.nickname if @player_2.dead?
+      
+      @player_2.nickname
+    end
+
     private
 
     def player_attack(player:, cards:, can_attack:, state_machine_skip_attack:, state_machine_attack:)
