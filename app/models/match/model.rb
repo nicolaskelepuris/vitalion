@@ -136,34 +136,39 @@ module Match
       @observers.each { |o| o.end_round(self) }
     end
 
-    def player_1_defend(cards)
-      raise StandardError, "Can't defend now" unless @state_machine.may_player_1_defend?
+    def player_defend(defender:, defender_cards:, attacker:, can_defend:, state_machine_defend:)
+      raise StandardError, "Can't defend now" unless can_defend
 
-      @player_1.defend(attacker: @player_2, defense_cards: cards)
+      defender.defend(attacker: attacker, defense_cards: defender_cards)
 
-      if @player_1.dead?
+      if defender.dead?
         @state_machine.finish
       else
-        @state_machine.player_1_defend
+        state_machine_defend.call
       end
 
       end_defense_turn
       end_round
     end
 
+    def player_1_defend(cards)
+      player_defend(
+        defender: @player_1,
+        defender_cards: cards,
+        attacker: @player_2,
+        can_defend: @state_machine.may_player_1_defend?,
+        state_machine_defend: -> { @state_machine.player_1_defend }
+      )
+    end
+
     def player_2_defend(cards)
-      raise StandardError, "Can't defend now" unless @state_machine.may_player_2_defend?
-
-      @player_2.defend(attacker: @player_1, defense_cards: cards)
-
-      if @player_2.dead?
-        @state_machine.finish
-      else
-        @state_machine.player_2_defend
-      end
-
-      end_defense_turn
-      end_round
+      player_defend(
+        defender: @player_2,
+        defender_cards: cards,
+        attacker: @player_1,
+        can_defend: @state_machine.may_player_2_defend?,
+        state_machine_defend: -> { @state_machine.player_2_defend }
+      )
     end
 
     def end_round
