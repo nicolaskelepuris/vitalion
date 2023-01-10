@@ -165,7 +165,7 @@ module Match
       end_round
     end
 
-    def end_round(skipped_attack: false)
+    def end_round
       [@player_1, @player_2].each { |player| player.refill_cards(all_cards: @cards) }
     end
   end
