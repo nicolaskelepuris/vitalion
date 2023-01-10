@@ -617,6 +617,22 @@ RSpec.describe ::GameChannel, type: :channel do
 
       subject(:defend) { perform :defend, cards: choosed_attack_cards_ids + choosed_defense_cards_ids }
 
+      context 'when match finishes' do
+        before do
+          Matches[password]
+            .instance_variable_get(is_player_1_defense_turn ? :@player_1 : :@player_2)
+            .instance_variable_set(:@health, 1)
+        end
+
+        it 'notifies that match finished' do
+          expect { defend }
+            .to have_broadcasted_to("notifications_#{current_user}")
+            .with(method: 'match_finished', data: { winner: is_player_1_defense_turn ? second_player_nickname : current_user_nickname })
+            .and have_broadcasted_to("notifications_#{second_player}")
+            .with(method: 'match_finished', data: { winner: is_player_1_defense_turn ? second_player_nickname : current_user_nickname })
+        end
+      end
+
       it 'returns match state to player one' do
         expect { defend }
           .to have_broadcasted_to("notifications_#{current_user}")
