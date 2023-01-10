@@ -35,6 +35,14 @@ module Player
       receive_damage(attack - defense)
     end
 
+    def refill_cards(all_cards:)
+      count_to_refill = [@current_attack.length + @current_defense.length, 1].max
+      @cards.push(*all_cards.sample(count_to_refill))
+
+      @current_attack = []
+      @current_defense = []
+    end
+
     private
 
     def receive_damage(damage)

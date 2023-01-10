@@ -97,7 +97,7 @@ module Match
       if prepare_attack_result[:skipped_attack]
         @state_machine.player_1_skip_attack
 
-        end_round(skipped_attack: true)
+        @player_1.refill_cards(all_cards: @cards)
         skip_turn
         return
       end
@@ -114,7 +114,7 @@ module Match
       if prepare_attack_result[:skipped_attack]
         @state_machine.player_2_skip_attack
 
-        end_round(skipped_attack: true)
+        @player_2.refill_cards(all_cards: @cards)
         skip_turn
         return
       end
@@ -166,39 +166,7 @@ module Match
     end
 
     def end_round(skipped_attack: false)
-      refill_cards(skipped_attack:)
-      clear_turn
-    end
-
-    def refill_cards(skipped_attack:)
-      if @state_machine.player_1_attack_turn?
-        if skipped_attack
-          player_1_refill_count = 0
-          player_2_refill_count = 1
-        else
-          player_1_refill_count = @player_1.current_defense.count
-          player_2_refill_count = @player_2.current_attack.count
-        end
-      else
-        if skipped_attack
-          player_1_refill_count = 1
-          player_2_refill_count = 0
-        else
-          player_1_refill_count = @player_1.current_attack.count
-          player_2_refill_count = @player_2.current_defense.count
-        end
-      end
-
-      @player_1.cards.push(*@cards.sample(player_1_refill_count))
-      @player_2.cards.push(*@cards.sample(player_2_refill_count))
-    end
-
-    def clear_turn
-      @player_1.current_defense = []
-      @player_1.current_attack = []
-
-      @player_2.current_defense = []
-      @player_2.current_attack = []
+      [@player_1, @player_2].each { |player| player.refill_cards(all_cards: @cards) }
     end
   end
 end
