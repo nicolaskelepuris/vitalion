@@ -24,5 +24,10 @@ module Player
     def dead?
       @health.zero?
     end
+
+    def prepare_attack(cards:)
+      @current_attack = @cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
+      @cards -= @current_attack
+    end
   end
 end

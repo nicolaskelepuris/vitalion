@@ -92,7 +92,7 @@ module Match
     def player_1_attack(cards)
       raise StandardError, "Can't attack now" unless @state_machine.may_player_1_attack?
 
-      create_attack(player: @player_1, cards:)
+      @player_1.prepare_attack(cards:)
 
       if @player_1.current_attack.empty?
         @state_machine.player_1_skip_attack
@@ -109,7 +109,7 @@ module Match
     def player_2_attack(cards)
       raise StandardError, "Can't attack now" unless @state_machine.may_player_2_attack?
 
-      create_attack(player: @player_2, cards:)
+      @player_2.prepare_attack(cards:)
 
       if @player_2.current_attack.empty?
         @state_machine.player_2_skip_attack
@@ -121,11 +121,6 @@ module Match
 
       @state_machine.player_2_attack
       end_attack_turn
-    end
-
-    def create_attack(player:, cards:)
-      player.current_attack = player.cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
-      player.cards -= player.current_attack
     end
 
     def end_attack_turn
