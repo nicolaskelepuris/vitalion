@@ -18,14 +18,14 @@ module Player
 
     def prepare_attack(cards:)
       @using_cards = @cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
-      @cards -= @using_cards
+      @cards = remove_used_cards
 
       { skipped_attack: @using_cards.empty? }
     end
 
     def defend(attacker:, defense_cards:)
       @using_cards = @cards.select { |card| defense_cards.include?(card.id) && card.defense.positive? }.uniq
-      @cards -= @using_cards
+      @cards = remove_used_cards
 
       attack = attacker.using_cards.sum(&:attack)
       defense = @using_cards.sum(&:defense)
@@ -50,6 +50,16 @@ module Player
     end
 
     private
+
+    def remove_used_cards
+      seen = {}
+      @cards.reject do |card|
+        should_remove = @using_cards.include?(card) && !seen.include?(card)
+        seen[card] = true if should_remove
+
+        should_remove
+      end
+    end
 
     def receive_damage(damage)
       return if damage.nil?

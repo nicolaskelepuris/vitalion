@@ -268,6 +268,104 @@ RSpec.describe ::GameChannel, type: :channel do
           end
         end
       end
+
+      context 'after some rounds' do
+        let(:is_player_1_attack_turn) { Matches[password].state(current_user)[:player_1][:attack_turn] }
+
+        before do
+          Matches[password].attack(player_id: is_player_1_attack_turn ? current_user : second_player, cards: attack_cards.pluck(:id))
+          Matches[password].defend(player_id: is_player_1_attack_turn ? second_player : current_user, cards: defense_cards.pluck(:id))
+
+          Matches[password].attack(player_id: is_player_1_attack_turn ? second_player : current_user, cards: attack_cards.pluck(:id))
+          Matches[password].defend(player_id: is_player_1_attack_turn ? current_user : second_player, cards: defense_cards.pluck(:id))
+
+          Matches[password].attack(player_id: is_player_1_attack_turn ? current_user : second_player, cards: attack_cards.pluck(:id))
+          Matches[password].defend(player_id: is_player_1_attack_turn ? second_player : current_user, cards: defense_cards.pluck(:id))
+
+          Matches[password].attack(player_id: is_player_1_attack_turn ? second_player : current_user, cards: attack_cards.pluck(:id))
+          Matches[password].defend(player_id: is_player_1_attack_turn ? current_user : second_player, cards: defense_cards.pluck(:id))
+        end
+
+        context 'when retrieving match state as player 1' do
+          before do
+            stub_connection(current_user:)
+            subscribe password:
+          end
+  
+          it 'returns match state' do
+            expect { start_round }
+              .to have_broadcasted_to("notifications_#{current_user}")
+              .with(
+                lambda do |payload|
+                  expect(payload[:method]).to eq('start_round')
+                  expect(payload[:data])
+                    .to include(
+                      player_1: include(
+                        cards: be_a(::Array),
+                        defense_turn: false,
+                        nickname: current_user_nickname,
+                        id: current_user
+                      ),
+                      player_2: include(
+                        cards: nil,
+                        defense_turn: false,
+                        nickname: second_player_nickname,
+                        id: second_player
+                      )
+                    )
+  
+                  player_1 = payload[:data][:player_1]
+                  player_2 = payload[:data][:player_2]
+                  player_cards = player_1[:cards]
+  
+                  expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+                  expect(player_cards.length).to eq(5)
+                  expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
+                end
+              )
+          end
+        end
+  
+        context 'when retrieving match state as player 2' do
+          before do
+            stub_connection current_user: second_player
+            subscribe password:
+          end
+  
+          it 'returns match state' do
+            expect { start_round }
+              .to have_broadcasted_to("notifications_#{second_player}")
+              .with(
+                lambda do |payload|
+                  expect(payload[:method]).to eq('start_round')
+                  expect(payload[:data])
+                    .to include(
+                      player_1: include(
+                        cards: nil,
+                        defense_turn: false,
+                        nickname: current_user_nickname,
+                        id: current_user
+                      ),
+                      player_2: include(
+                        cards: be_a(::Array),
+                        defense_turn: false,
+                        nickname: second_player_nickname,
+                        id: second_player
+                      )
+                    )
+  
+                  player_1 = payload[:data][:player_1]
+                  player_2 = payload[:data][:player_2]
+                  player_cards = player_2[:cards]
+  
+                  expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
+                  expect(player_cards.length).to eq(5)
+                  expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
+                end
+              )
+          end
+        end
+      end
     end
   end
 
