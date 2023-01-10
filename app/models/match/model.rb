@@ -138,9 +138,7 @@ module Match
     def player_1_defend(cards)
       raise StandardError, "Can't defend now" unless @state_machine.may_player_1_defend?
 
-      @player_1.prepare_defense(cards:)
-
-      process_damage(attacker: @player_2, defender: @player_1)
+      @player_1.defend(attacker: @player_2, defense_cards: cards)
 
       if @player_1.dead?
         @state_machine.finish
@@ -155,9 +153,7 @@ module Match
     def player_2_defend(cards)
       raise StandardError, "Can't defend now" unless @state_machine.may_player_2_defend?
 
-      @player_2.prepare_defense(cards:)
-
-      process_damage(attacker: @player_1, defender: @player_2)
+      @player_2.defend(attacker: @player_1, defense_cards: cards)
 
       if @player_2.dead?
         @state_machine.finish
@@ -167,13 +163,6 @@ module Match
 
       end_defense_turn
       end_round
-    end
-
-    def process_damage(attacker:, defender:)
-      attack = attacker.current_attack.sum(&:attack)
-      defense = defender.current_defense.sum(&:defense)
-
-      defender.receive_damage(attack - defense)
     end
 
     def end_round(skipped_attack: false)

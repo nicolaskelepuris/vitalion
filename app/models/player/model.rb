@@ -14,13 +14,6 @@ module Player
       @current_defense = []
     end
 
-    def receive_damage(damage)
-      return if damage.nil?
-      return unless damage.positive?
-
-      @health = [health - damage, 0].max
-    end
-
     def dead?
       @health.zero?
     end
@@ -32,9 +25,23 @@ module Player
       { skipped_attack: @current_attack.empty? }
     end
 
-    def prepare_defense(cards:)
-      @current_defense = @cards.select { |card| cards.include?(card.id) && card.defense.positive? }.uniq
+    def defend(attacker:, defense_cards:)
+      @current_defense = @cards.select { |card| defense_cards.include?(card.id) && card.defense.positive? }.uniq
       @cards -= @current_defense
+
+      attack = attacker.current_attack.sum(&:attack)
+      defense = @current_defense.sum(&:defense)
+
+      receive_damage(attack - defense)
+    end
+
+    private
+
+    def receive_damage(damage)
+      return if damage.nil?
+      return unless damage.positive?
+
+      @health = [health - damage, 0].max
     end
   end
 end
