@@ -32,7 +32,7 @@ module Match
     end
 
     def defend(player_id:, cards:)
-      cards = [] if cards.nil?
+      cards ||= []
 
       return player_1_defend(cards) if player_id == @player_1.id
 
