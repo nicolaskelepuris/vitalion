@@ -71,7 +71,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
                   cards: be_a(::Array),
                   attack_turn: false,
                   defense_turn: false,
-                  health: 100,
+                  health: 20,
                   id: current_user,
                   nickname: nickname,
                   using_cards: []
@@ -125,7 +125,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
                   cards: nil,
                   attack_turn: false,
                   defense_turn: false,
-                  health: 100,
+                  health: 20,
                   id: first_player,
                   nickname: first_player_nickname,
                   using_cards: []
@@ -134,7 +134,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
                   cards: be_a(::Array),
                   attack_turn: false,
                   defense_turn: false,
-                  health: 100,
+                  health: 20,
                   id: current_user,
                   nickname:,
                   using_cards: []

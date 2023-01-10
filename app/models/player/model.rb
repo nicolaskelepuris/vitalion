@@ -8,7 +8,7 @@ module Player
       @id = id
       @nickname = nickname || 'N/A'
       @cards = cards
-      @health = 100
+      @health = 20
       @using_cards = []
     end
 
