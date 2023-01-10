@@ -59,11 +59,9 @@ module Match
     end
 
     def state(id)
-      player_1_cards = id == @player_1.id ? @player_1.cards : nil      
-      player_1_using_cards = @player_1.using_cards
+      player_1_cards = id == @player_1.id ? @player_1.cards : nil
 
       player_2_cards = id == @player_2&.id ? @player_2.cards : nil
-      player_2_using_cards = @player_2.present? ? @player_2.using_cards : []
 
       {
         player_1: {
@@ -73,7 +71,7 @@ module Match
           attack_turn: @state_machine.player_1_attack_turn?,
           defense_turn: @state_machine.player_1_defense_turn?,
           cards: player_1_cards,
-          using_cards: player_1_using_cards
+          using_cards: @player_1.using_cards
         },
         player_2: {
           id: @player_2&.id,
@@ -82,7 +80,7 @@ module Match
           attack_turn: @state_machine.player_2_attack_turn?,
           defense_turn: @state_machine.player_2_defense_turn?,
           cards: player_2_cards,
-          using_cards: player_2_using_cards
+          using_cards: @player_2&.using_cards || []
         }
       }
     end
