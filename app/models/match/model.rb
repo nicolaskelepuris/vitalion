@@ -87,38 +87,41 @@ module Match
 
     private
 
-    def player_1_attack(cards)
-      raise StandardError, "Can't attack now" unless @state_machine.may_player_1_attack?
+    def player_attack(player:, cards:, can_attack:, state_machine_skip_attack:, state_machine_attack:)
+      raise StandardError, "Can't attack now" unless can_attack
 
-      prepare_attack_result = @player_1.prepare_attack(cards:)
+      prepare_attack_result = player.prepare_attack(cards:)
 
       if prepare_attack_result[:skipped_attack]
-        @state_machine.player_1_skip_attack
+        state_machine_skip_attack.call
 
-        @player_1.refill_cards(all_cards: @cards)
+        player.refill_cards(all_cards: @cards)
         skip_turn
         return
       end
 
-      @state_machine.player_1_attack
+      state_machine_attack.call
       end_attack_turn
     end
 
+    def player_1_attack(cards)
+      player_attack(
+        player: @player_1,
+        cards: cards,
+        can_attack: @state_machine.may_player_1_attack?,
+        state_machine_skip_attack: -> { @state_machine.player_1_skip_attack },
+        state_machine_attack: -> { @state_machine.player_1_attack }
+      )
+    end
+
     def player_2_attack(cards)
-      raise StandardError, "Can't attack now" unless @state_machine.may_player_2_attack?
-
-      prepare_attack_result = @player_2.prepare_attack(cards:)
-
-      if prepare_attack_result[:skipped_attack]
-        @state_machine.player_2_skip_attack
-
-        @player_2.refill_cards(all_cards: @cards)
-        skip_turn
-        return
-      end
-
-      @state_machine.player_2_attack
-      end_attack_turn
+      player_attack(
+        player: @player_2,
+        cards: cards,
+        can_attack: @state_machine.may_player_2_attack?,
+        state_machine_skip_attack: -> { @state_machine.player_2_skip_attack },
+        state_machine_attack: -> { @state_machine.player_2_attack }
+      )
     end
 
     def end_attack_turn
