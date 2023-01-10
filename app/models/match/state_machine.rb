@@ -18,7 +18,8 @@ module Match
       end
 
       event :start_match do
-        transitions from: :waiting_to_start, to: %i[player_1_attack_turn player_2_attack_turn].sample
+        transitions from: :waiting_to_start, to: :player_1_attack_turn, guard: :random?
+        transitions from: :waiting_to_start, to: :player_2_attack_turn
       end
 
       event :player_1_attack do
@@ -48,6 +49,12 @@ module Match
       event :finish do
         transitions to: :finished
       end
+    end
+
+    private
+
+    def random?
+      [true, false].sample
     end
   end
 end
