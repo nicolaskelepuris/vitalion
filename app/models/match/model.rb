@@ -93,8 +93,17 @@ module Match
       return unless @state_machine.finished?
 
       return @player_1.nickname if @player_2.dead?
-      
+
       @player_2.nickname
+    end
+
+    def restart
+      raise StandardError, "Can't restart the match" unless @state_machine.finished?
+
+      @state_machine = StateMachine.new
+      @player_1 = ::Player::Model.new(id: @player_1.id, nickname: @player_1.nickname, cards: @cards.sample(5))
+      @player_2 = ::Player::Model.new(id: @player_2.id, nickname: @player_2.nickname, cards: @cards.sample(5))
+      @state_machine.start_match
     end
 
     private

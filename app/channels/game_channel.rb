@@ -48,6 +48,15 @@ class GameChannel < ApplicationCable::Channel
     end
   end
 
+  def restart_match
+    match.restart
+    match.players_ids.each do |id|
+      Broadcasting.private_broadcast_to(id, { method: 'match_started' })
+    end
+  rescue StandardError => e
+    Broadcasting.private_broadcast_to(current_user, { method: 'match_started', error: e.message })
+  end
+
   private
 
   def match
