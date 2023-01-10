@@ -3,15 +3,14 @@
 module Player
   class Model
     attr_reader :id, :health, :nickname
-    attr_accessor :cards, :current_attack, :current_defense
+    attr_accessor :cards, :using_cards
 
     def initialize(cards:, id: nil, nickname: nil)
       @id = id
       @nickname = nickname || 'N/A'
       @cards = cards
       @health = 100
-      @current_attack = []
-      @current_defense = []
+      @using_cards = []
     end
 
     def dead?
@@ -19,28 +18,28 @@ module Player
     end
 
     def prepare_attack(cards:)
-      @current_attack = @cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
-      @cards -= @current_attack
+      @using_cards = @cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
+      @cards -= @using_cards
 
-      { skipped_attack: @current_attack.empty? }
+      { skipped_attack: @using_cards.empty? }
     end
 
     def defend(attacker:, defense_cards:)
-      @current_defense = @cards.select { |card| defense_cards.include?(card.id) && card.defense.positive? }.uniq
-      @cards -= @current_defense
+      @using_cards = @cards.select { |card| defense_cards.include?(card.id) && card.defense.positive? }.uniq
+      @cards -= @using_cards
 
-      attack = attacker.current_attack.sum(&:attack)
-      defense = @current_defense.sum(&:defense)
+      attack = attacker.using_cards.sum(&:attack)
+      defense = @using_cards.sum(&:defense)
 
       receive_damage(attack - defense)
     end
 
     def refill_cards(all_cards:)
-      count_to_refill = [@current_attack.length + @current_defense.length, 1].max
+      count_to_refill = [@using_cards.length, 1].max
+
       @cards.push(*all_cards.sample(count_to_refill))
 
-      @current_attack = []
-      @current_defense = []
+      @using_cards = []
     end
 
     private
