@@ -11,7 +11,7 @@ class GameChannel < ApplicationCable::Channel
   end
 
   def start_round
-    self.class.send_match_state(match, 'start_round')
+    Broadcasting.private_broadcast_to(current_user, { method: 'start_round', data: match.state(current_user) })
   end
 
   def attack(data)
