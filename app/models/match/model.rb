@@ -97,7 +97,7 @@ module Match
       if @player_1.current_attack.empty?
         @state_machine.player_1_skip_attack
 
-        end_round
+        end_round(skipped_attack: true)
         skip_turn
         return
       end
@@ -114,7 +114,7 @@ module Match
       if @player_2.current_attack.empty?
         @state_machine.player_2_skip_attack
 
-        end_round
+        end_round(skipped_attack: true)
         skip_turn
         return
       end
@@ -186,24 +186,28 @@ module Match
       defender.receive_damage(attack - defense)
     end
 
-    def end_round
-      refill_cards
+    def end_round(skipped_attack: false)
+      refill_cards(skipped_attack:)
       clear_turn
     end
 
-    def refill_cards
+    def refill_cards(skipped_attack:)
       if @state_machine.player_1_attack_turn?
-        player_1_refill_count = 0
-        player_2_refill_count = 1
-      elsif @state_machine.player_2_attack_turn?
-        player_1_refill_count = 1
-        player_2_refill_count = 0
-      elsif @state_machine.player_1_defense_turn?
-        player_1_refill_count = @player_1.current_defense.count
-        player_2_refill_count = @player_2.current_attack.count
+        if skipped_attack
+          player_1_refill_count = 0
+          player_2_refill_count = 1
+        else
+          player_1_refill_count = @player_1.current_defense.count
+          player_2_refill_count = @player_2.current_attack.count
+        end
       else
-        player_1_refill_count = @player_1.current_attack.count
-        player_2_refill_count = @player_2.current_defense.count
+        if skipped_attack
+          player_1_refill_count = 1
+          player_2_refill_count = 0
+        else
+          player_1_refill_count = @player_1.current_attack.count
+          player_2_refill_count = @player_2.current_defense.count
+        end
       end
 
       @player_1.cards.push(*@cards.sample(player_1_refill_count))

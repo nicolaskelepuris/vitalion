@@ -465,6 +465,9 @@ RSpec.describe ::GameChannel, type: :channel do
               end
             end
           )
+
+        expect(Matches[password].state(current_user)[:player_1][:cards].length).to eq(5)
+        expect(Matches[password].state(second_player)[:player_2][:cards].length).to eq(5)
       end
 
       it 'returns match state to player two' do
@@ -506,6 +509,9 @@ RSpec.describe ::GameChannel, type: :channel do
               end
             end
           )
+
+        expect(Matches[password].state(current_user)[:player_1][:cards].length).to eq(5)
+        expect(Matches[password].state(second_player)[:player_2][:cards].length).to eq(5)
       end
     end
   end
