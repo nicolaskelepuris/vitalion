@@ -31,5 +31,10 @@ module Player
 
       { skipped_attack: @current_attack.empty? }
     end
+
+    def prepare_defense(cards:)
+      @current_defense = @cards.select { |card| cards.include?(card.id) && card.defense.positive? }.uniq
+      @cards -= @current_defense
+    end
   end
 end

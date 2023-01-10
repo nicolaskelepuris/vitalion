@@ -138,7 +138,7 @@ module Match
     def player_1_defend(cards)
       raise StandardError, "Can't defend now" unless @state_machine.may_player_1_defend?
 
-      create_defense(player: @player_1, cards:)
+      @player_1.prepare_defense(cards:)
 
       process_damage(attacker: @player_2, defender: @player_1)
 
@@ -155,7 +155,7 @@ module Match
     def player_2_defend(cards)
       raise StandardError, "Can't defend now" unless @state_machine.may_player_2_defend?
 
-      create_defense(player: @player_2, cards:)
+      @player_2.prepare_defense(cards:)
 
       process_damage(attacker: @player_1, defender: @player_2)
 
@@ -167,11 +167,6 @@ module Match
 
       end_defense_turn
       end_round
-    end
-
-    def create_defense(player:, cards:)
-      player.current_defense = player.cards.select { |card| cards.include?(card.id) && card.defense.positive? }.uniq
-      player.cards -= player.current_defense
     end
 
     def process_damage(attacker:, defender:)
