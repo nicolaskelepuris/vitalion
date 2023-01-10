@@ -92,9 +92,9 @@ module Match
     def player_1_attack(cards)
       raise StandardError, "Can't attack now" unless @state_machine.may_player_1_attack?
 
-      @player_1.prepare_attack(cards:)
+      prepare_attack_result = @player_1.prepare_attack(cards:)
 
-      if @player_1.current_attack.empty?
+      if prepare_attack_result[:skipped_attack]
         @state_machine.player_1_skip_attack
 
         end_round(skipped_attack: true)
@@ -109,9 +109,9 @@ module Match
     def player_2_attack(cards)
       raise StandardError, "Can't attack now" unless @state_machine.may_player_2_attack?
 
-      @player_2.prepare_attack(cards:)
+      prepare_attack_result = @player_2.prepare_attack(cards:)
 
-      if @player_2.current_attack.empty?
+      if prepare_attack_result[:skipped_attack]
         @state_machine.player_2_skip_attack
 
         end_round(skipped_attack: true)
