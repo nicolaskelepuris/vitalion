@@ -14,10 +14,8 @@ class GameChannel < ApplicationCable::Channel
     player_match = current_user.match
 
     if player_match.present?
-      player_match.players_ids.each do |id|
-        Broadcasting.private_broadcast_to(id, { method: 'before_disconnect' })
-        ActionCable.server.remote_connections.where(current_user_id: id).disconnect
-        Broadcasting.private_broadcast_to(id, { method: 'after_disconnect' })
+      player_match.players_ids.select { |id| id != current_user.id }.each do |id|
+        Broadcasting.private_broadcast_to(id, { method: 'disconnect_from_channel' })
       end
 
       delete_match(player_match.password)

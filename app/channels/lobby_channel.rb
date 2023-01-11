@@ -11,8 +11,8 @@ class LobbyChannel < ApplicationCable::Channel
     player_match = current_user.match
 
     if player_match.present? && !player_match.started?
-      player_match.players_ids.each do |id|
-        ActionCable.server.remote_connections.where(current_user_id: id).disconnect
+      player_match.players_ids.select { |id| id != current_user.id }.each do |id|
+        Broadcasting.private_broadcast_to(id, { method: 'disconnect_from_channel' })
       end
   
       delete_match(player_match.password)
