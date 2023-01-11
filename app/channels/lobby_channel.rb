@@ -11,7 +11,7 @@ class LobbyChannel < ApplicationCable::Channel
     player_match = current_user.match
 
     return if player_match.nil?
-    return unless player_match.started?
+    return if player_match.started?
 
     player_match.players_ids.each do |id|
       ActionCable.server.remote_connections.where(current_user_id: id).disconnect
