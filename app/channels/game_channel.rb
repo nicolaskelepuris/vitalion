@@ -50,11 +50,9 @@ class GameChannel < ApplicationCable::Channel
 
   def restart_match
     match.restart
-    match.players_ids.each do |id|
-      Broadcasting.private_broadcast_to(id, { method: 'match_started' })
-    end
+    self.class.send_match_state(match, 'start_round')
   rescue StandardError => e
-    Broadcasting.private_broadcast_to(current_user, { method: 'match_started', error: e.message })
+    Broadcasting.private_broadcast_to(current_user, { method: 'start_round', error: e.message })
   end
 
   private

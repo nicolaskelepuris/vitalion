@@ -103,6 +103,7 @@ module Match
       @state_machine = StateMachine.new
       @player_1 = ::Player::Model.new(id: @player_1.id, nickname: @player_1.nickname, cards: @cards.sample(5))
       @player_2 = ::Player::Model.new(id: @player_2.id, nickname: @player_2.nickname, cards: @cards.sample(5))
+      @state_machine.second_player_join
       @state_machine.start_match
     end
 
