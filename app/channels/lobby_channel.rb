@@ -8,11 +8,16 @@ class LobbyChannel < ApplicationCable::Channel
   end
 
   def unsubscribed
-    return if current_user.match.nil?
+    player_match = current_user.match
 
-    current_user.match.players_ids.each do |id|
+    return if player_match.nil?
+    return unless player_match.started?
+
+    player_match.players_ids.each do |id|
       ActionCable.server.remote_connections.where(current_user_id: id).disconnect
     end
+
+    delete_match(player_match.password)
   end
 
   def join_lobby(data)

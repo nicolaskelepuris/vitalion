@@ -12,4 +12,8 @@ module Matching
   def create_match(password, match)
     Matches[password] = match
   end
+
+  def delete_match(password)
+    Matches.delete(password)
+  end
 end

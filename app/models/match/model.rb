@@ -2,12 +2,15 @@
 
 module Match
   class Model
-    def initialize(player_1_id:, player_1_nickname: nil, observers: [])
+    attr_reader :password
+
+    def initialize(player_1_id:, player_1_nickname: nil, observers: [], password: nil)
       @state_machine = StateMachine.new
 
       @cards = ::Card::List.call
       @player_1 = ::Player::Model.new(id: player_1_id, nickname: player_1_nickname, cards: @cards.sample(5))
       @observers = observers
+      @password = password
     end
 
     def join(player_id:, player_nickname: nil)
@@ -87,6 +90,10 @@ module Match
 
     def finished?
       @state_machine.finished?
+    end
+
+    def started?
+      !@state_machine.waiting_second_player? && !@state_machine.waiting_to_start?
     end
 
     def winner
