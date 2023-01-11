@@ -3,11 +3,14 @@
 require 'rails_helper'
 
 RSpec.describe ::GameChannel, type: :channel do
+  let(:attack_card_1) { Card::Record.create(name: 'card 3', attack: 5, defense: 0) }
+  let(:attack_card_2) { Card::Record.create(name: 'card 2', attack: 4, defense: 0) }
+  let(:stackable_attack_card_1) { Card::Record.create(name: 'card 1', attack: 3, defense: 0, stackable: true) }
   let!(:attack_cards) do
     [
-      Card::Record.create(name: 'card 1', attack: 3, defense: 0),
-      Card::Record.create(name: 'card 2', attack: 4, defense: 0),
-      Card::Record.create(name: 'card 3', attack: 5, defense: 0)
+      stackable_attack_card_1,
+      attack_card_2,
+      attack_card_1
     ]
   end
 
@@ -208,14 +211,14 @@ RSpec.describe ::GameChannel, type: :channel do
                       player_1: include(
                         cards: be_a(::Array),
                         defense_turn: false,
-                        health: is_player_1_attack_turn ? 40 : 31,
+                        health: is_player_1_attack_turn ? 40 : 35,
                         nickname: current_user_nickname,
                         id: current_user.id
                       ),
                       player_2: include(
                         cards: nil,
                         defense_turn: false,
-                        health: is_player_1_attack_turn ? 31 : 40,
+                        health: is_player_1_attack_turn ? 35 : 40,
                         nickname: second_player_nickname,
                         id: second_player.id
                       )
@@ -250,14 +253,14 @@ RSpec.describe ::GameChannel, type: :channel do
                       player_1: include(
                         cards: nil,
                         defense_turn: false,
-                        health: is_player_1_attack_turn ? 40 : 31,
+                        health: is_player_1_attack_turn ? 40 : 35,
                         nickname: current_user_nickname,
                         id: current_user.id
                       ),
                       player_2: include(
                         cards: be_a(::Array),
                         defense_turn: false,
-                        health: is_player_1_attack_turn ? 31 : 40,
+                        health: is_player_1_attack_turn ? 35 : 40,
                         nickname: second_player_nickname,
                         id: second_player.id
                       )
@@ -401,9 +404,9 @@ RSpec.describe ::GameChannel, type: :channel do
         is_player_1_attack_turn
       end
 
-      let(:choosed_attack_cards_ids) { attack_cards.sample(2).pluck(:id) }
+      let(:choosed_attack_cards_ids) { attack_cards.pluck(:id) }
       let(:choosed_defense_cards_ids) { defense_cards.sample(2).pluck(:id) }
-      let(:used_cards) { attack_cards.select { |c| choosed_attack_cards_ids.include? c.id }.map(&:as_json) }
+      let(:used_cards) { [attack_card_1, stackable_attack_card_1].map(&:as_json) }
 
       before do
         stub_connection(current_user: is_player_1_attack_turn ? current_user : second_player)
@@ -621,7 +624,7 @@ RSpec.describe ::GameChannel, type: :channel do
         subscribe password:
       end
 
-      let(:turn_damage) { first_attack_cards.sum(&:attack) - defense_cards.select { |c| choosed_defense_cards_ids.include? c.id }.sum(&:defense) }
+      let(:turn_damage) { [attack_card_1, stackable_attack_card_1].sum(&:attack) - defense_cards.select { |c| choosed_defense_cards_ids.include? c.id }.sum(&:defense) }
       let(:health_after_defense) { 40 - turn_damage }
 
       subject(:defend) { perform :defend, cards: choosed_attack_cards_ids + choosed_defense_cards_ids }
@@ -656,7 +659,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     health: is_player_1_defense_turn ? health_after_defense : 40,
                     nickname: current_user_nickname,
                     id: current_user.id,
-                    using_cards: match_array(is_player_1_defense_turn ? used_cards : first_attack_cards.map(&:as_json)),
+                    using_cards: match_array(is_player_1_defense_turn ? used_cards : [attack_card_1, stackable_attack_card_1].map(&:as_json)),
                     cards: be_a(::Array)
                   ),
                   player_2: include(
@@ -665,7 +668,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     health: is_player_1_defense_turn ? 40 : health_after_defense,
                     nickname: second_player_nickname,
                     id: second_player.id,
-                    using_cards: match_array(is_player_1_defense_turn ? first_attack_cards.map(&:as_json) : used_cards),
+                    using_cards: match_array(is_player_1_defense_turn ? [attack_card_1, stackable_attack_card_1].map(&:as_json) : used_cards),
                     cards: nil
                   )
                 )
@@ -676,8 +679,8 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - choosed_defense_cards_ids)
                 expect(player_cards.length).to eq(5 - choosed_defense_cards_ids.length)
               else
-                expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - first_attack_cards_ids)
-                expect(player_cards.length).to eq(5 - first_attack_cards_ids.length)
+                expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - [attack_card_1, stackable_attack_card_1].pluck(:id))
+                expect(player_cards.length).to eq(5 - [attack_card_1, stackable_attack_card_1].length)
               end
             end
           )
@@ -700,7 +703,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     health: is_player_1_defense_turn ? health_after_defense : 40,
                     nickname: current_user_nickname,
                     id: current_user.id,
-                    using_cards: match_array(is_player_1_defense_turn ? used_cards : first_attack_cards.map(&:as_json)),
+                    using_cards: match_array(is_player_1_defense_turn ? used_cards : [attack_card_1, stackable_attack_card_1].map(&:as_json)),
                     cards: nil
                   ),
                   player_2: include(
@@ -709,7 +712,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     health: is_player_1_defense_turn ? 40 : health_after_defense,
                     nickname: second_player_nickname,
                     id: second_player.id,
-                    using_cards: match_array(is_player_1_defense_turn ? first_attack_cards.map(&:as_json) : used_cards),
+                    using_cards: match_array(is_player_1_defense_turn ? [attack_card_1, stackable_attack_card_1].map(&:as_json) : used_cards),
                     cards: be_a(::Array)
                   )
                 )
@@ -717,8 +720,8 @@ RSpec.describe ::GameChannel, type: :channel do
               player_cards = payload[:data][:player_2][:cards]
 
               if is_player_1_defense_turn
-                expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - first_attack_cards_ids)
-                expect(player_cards.length).to eq(5 - first_attack_cards_ids.length)
+                expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - [attack_card_1, stackable_attack_card_1].pluck(:id))
+                expect(player_cards.length).to eq(5 - [attack_card_1, stackable_attack_card_1].length)
               else
                 expect(player_cards.pluck(:id)).to match_array(::Card::Record.pluck(:id) - choosed_defense_cards_ids)
                 expect(player_cards.length).to eq(5 - choosed_defense_cards_ids.length)

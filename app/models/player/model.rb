@@ -17,7 +17,7 @@ module Player
     end
 
     def prepare_attack(cards:)
-      @using_cards = @cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
+      @using_cards = get_valid_cards(cards)
       @cards = remove_used_cards
 
       { skipped_attack: @using_cards.empty? }
@@ -50,6 +50,16 @@ module Player
     end
 
     private
+
+    def get_valid_cards(cards)
+      valid_cards = @cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
+      non_stackables = valid_cards.reject(&:stackable)
+
+      return valid_cards unless non_stackables.length > 1
+
+      non_stackable = non_stackables.max_by(&:attack)
+      valid_cards.select(&:stackable) << non_stackable
+    end
 
     def remove_used_cards
       seen = {}
