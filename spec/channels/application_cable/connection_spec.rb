@@ -8,7 +8,7 @@ RSpec.describe ::ApplicationCable::Connection, type: :channel do
       it 'connects and generate uuid for current user' do
         connect '/cable'
 
-        expect(connection.current_user).to match(/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/)
+        expect(connection.current_user.id).to match(/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/)
       end
     end
   end

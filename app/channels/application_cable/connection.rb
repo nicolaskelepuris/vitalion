@@ -5,7 +5,7 @@ module ApplicationCable
     identified_by :current_user
 
     def connect
-      self.current_user = SecureRandom.uuid
+      self.current_user = User.new
     end
   end
 end

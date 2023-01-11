@@ -19,14 +19,14 @@ RSpec.describe ::GameChannel, type: :channel do
   end
 
   describe 'subscribe' do
-    let(:current_user) { SecureRandom.uuid }
-    let(:player_2) { SecureRandom.uuid }
+    let(:current_user) { ::ApplicationCable::User.new }
+    let(:player_2) { ::ApplicationCable::User.new }
     let(:password) { 'any password' }
 
     before do
-      Matches[password] = ::Match::Model.new(player_1_id: current_user, observers: [::GameChannel])
-      Matches[password].join(player_id: player_2)
-      Matches[password].start(current_user)
+      Matches[password] = ::Match::Model.new(player_1_id: current_user.id, observers: [::GameChannel])
+      Matches[password].join(player_id: player_2.id)
+      Matches[password].start(current_user.id)
     end
 
     describe 'success' do
@@ -40,7 +40,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
           expect(subscription).to be_confirmed
           expect(subscription).to have_stream_from("match_#{password}")
-          expect(subscription).to have_stream_from("notifications_#{current_user}")
+          expect(subscription).to have_stream_from("notifications_#{current_user.id}")
         end
       end
 
@@ -52,7 +52,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
           expect(subscription).to be_confirmed
           expect(subscription).to have_stream_from("match_#{password}")
-          expect(subscription).to have_stream_from("notifications_#{player_2}")
+          expect(subscription).to have_stream_from("notifications_#{player_2.id}")
         end
       end
     end
@@ -61,7 +61,7 @@ RSpec.describe ::GameChannel, type: :channel do
       subject(:subscribe_to_game) { subscribe password: 'any password' }
 
       context 'when subscribing as another player' do
-        let(:another_player) { SecureRandom.uuid }
+        let(:another_player) { ::ApplicationCable::User.new }
 
         before { stub_connection current_user: another_player }
 
@@ -77,17 +77,17 @@ RSpec.describe ::GameChannel, type: :channel do
   describe 'start_round' do
     describe 'success' do
       let(:password) { 'any password' }
-      let(:current_user) { SecureRandom.uuid }
+      let(:current_user) { ::ApplicationCable::User.new }
       let(:current_user_nickname) { 'a good player 1 nickname' }
-      let(:second_player) { SecureRandom.uuid }
+      let(:second_player) { ::ApplicationCable::User.new }
       let(:second_player_nickname) { 'player 2 nickname here' }
 
       before do
         Matches[password] =
-          ::Match::Model.new(player_1_id: current_user, player_1_nickname: current_user_nickname,
+          ::Match::Model.new(player_1_id: current_user.id, player_1_nickname: current_user_nickname,
                              observers: [::GameChannel])
-        Matches[password].join(player_id: second_player, player_nickname: second_player_nickname)
-        Matches[password].start(current_user)
+        Matches[password].join(player_id: second_player.id, player_nickname: second_player_nickname)
+        Matches[password].start(current_user.id)
       end
 
       subject(:start_round) { perform :start_round, password: }
@@ -100,7 +100,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
         it 'returns match state' do
           expect { start_round }
-            .to have_broadcasted_to("notifications_#{current_user}")
+            .to have_broadcasted_to("notifications_#{current_user.id}")
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
@@ -111,14 +111,14 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: false,
                       health: 20,
                       nickname: current_user_nickname,
-                      id: current_user
+                      id: current_user.id
                     ),
                     player_2: include(
                       cards: nil,
                       defense_turn: false,
                       health: 20,
                       nickname: second_player_nickname,
-                      id: second_player
+                      id: second_player.id
                     )
                   )
 
@@ -142,7 +142,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
         it 'returns match state' do
           expect { start_round }
-            .to have_broadcasted_to("notifications_#{second_player}")
+            .to have_broadcasted_to("notifications_#{second_player.id}")
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
@@ -153,14 +153,14 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: false,
                       health: 20,
                       nickname: current_user_nickname,
-                      id: current_user
+                      id: current_user.id
                     ),
                     player_2: include(
                       cards: be_a(::Array),
                       defense_turn: false,
                       health: 20,
                       nickname: second_player_nickname,
-                      id: second_player
+                      id: second_player.id
                     )
                   )
 
@@ -177,7 +177,7 @@ RSpec.describe ::GameChannel, type: :channel do
       end
 
       context 'after a round' do
-        let(:is_player_1_attack_turn) { Matches[password].state(current_user)[:player_1][:attack_turn] }
+        let(:is_player_1_attack_turn) { Matches[password].state(current_user.id)[:player_1][:attack_turn] }
 
         before do
           cards_with_repeated_attack_card = attack_cards + defense_cards
@@ -187,8 +187,8 @@ RSpec.describe ::GameChannel, type: :channel do
             .instance_variable_get(is_player_1_attack_turn ? :@player_1 : :@player_2)
             .instance_variable_set(:@cards, cards_with_repeated_attack_card)
 
-          Matches[password].attack(player_id: is_player_1_attack_turn ? current_user : second_player, cards: attack_cards.pluck(:id))
-          Matches[password].defend(player_id: is_player_1_attack_turn ? second_player : current_user, cards: defense_cards.pluck(:id))
+          Matches[password].attack(player_id: is_player_1_attack_turn ? current_user.id : second_player.id, cards: attack_cards.pluck(:id))
+          Matches[password].defend(player_id: is_player_1_attack_turn ? second_player.id : current_user.id, cards: defense_cards.pluck(:id))
         end
 
         context 'when retrieving match state as player 1' do
@@ -199,7 +199,7 @@ RSpec.describe ::GameChannel, type: :channel do
   
           it 'returns match state' do
             expect { start_round }
-              .to have_broadcasted_to("notifications_#{current_user}")
+              .to have_broadcasted_to("notifications_#{current_user.id}")
               .with(
                 lambda do |payload|
                   expect(payload[:method]).to eq('start_round')
@@ -210,14 +210,14 @@ RSpec.describe ::GameChannel, type: :channel do
                         defense_turn: false,
                         health: is_player_1_attack_turn ? 20 : 17,
                         nickname: current_user_nickname,
-                        id: current_user
+                        id: current_user.id
                       ),
                       player_2: include(
                         cards: nil,
                         defense_turn: false,
                         health: is_player_1_attack_turn ? 17 : 20,
                         nickname: second_player_nickname,
-                        id: second_player
+                        id: second_player.id
                       )
                     )
   
@@ -241,7 +241,7 @@ RSpec.describe ::GameChannel, type: :channel do
   
           it 'returns match state' do
             expect { start_round }
-              .to have_broadcasted_to("notifications_#{second_player}")
+              .to have_broadcasted_to("notifications_#{second_player.id}")
               .with(
                 lambda do |payload|
                   expect(payload[:method]).to eq('start_round')
@@ -252,14 +252,14 @@ RSpec.describe ::GameChannel, type: :channel do
                         defense_turn: false,
                         health: is_player_1_attack_turn ? 20 : 17,
                         nickname: current_user_nickname,
-                        id: current_user
+                        id: current_user.id
                       ),
                       player_2: include(
                         cards: be_a(::Array),
                         defense_turn: false,
                         health: is_player_1_attack_turn ? 17 : 20,
                         nickname: second_player_nickname,
-                        id: second_player
+                        id: second_player.id
                       )
                     )
   
@@ -280,18 +280,18 @@ RSpec.describe ::GameChannel, type: :channel do
 
   describe 'restart_match' do
     let(:password) { 'any password' }
-    let(:current_user) { SecureRandom.uuid }
+    let(:current_user) { ::ApplicationCable::User.new }
     let(:current_user_nickname) { 'a good player 1 nickname' }
-    let(:second_player) { SecureRandom.uuid }
+    let(:second_player) { ::ApplicationCable::User.new }
     let(:second_player_nickname) { 'player 2 nickname here' }
     let(:player_performing_action) { [current_user, second_player].sample }
 
     before do
       Matches[password] =
-        ::Match::Model.new(player_1_id: current_user, player_1_nickname: current_user_nickname,
+        ::Match::Model.new(player_1_id: current_user.id, player_1_nickname: current_user_nickname,
                            observers: [::GameChannel])
-      Matches[password].join(player_id: second_player, player_nickname: second_player_nickname)
-      Matches[password].start(current_user)
+      Matches[password].join(player_id: second_player.id, player_nickname: second_player_nickname)
+      Matches[password].start(current_user.id)
 
       stub_connection(current_user: player_performing_action)
       subscribe password:
@@ -305,7 +305,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
         it 'notifies both players to start a new round' do
           expect { restart_match }
-            .to have_broadcasted_to("notifications_#{current_user}")
+            .to have_broadcasted_to("notifications_#{current_user.id}")
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
@@ -315,13 +315,13 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: false,
                       health: 20,
                       nickname: current_user_nickname,
-                      id: current_user
+                      id: current_user.id
                     ),
                     player_2: include(
                       defense_turn: false,
                       health: 20,
                       nickname: second_player_nickname,
-                      id: second_player
+                      id: second_player.id
                     )
                   )
 
@@ -334,7 +334,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
               end
             )
-            .and have_broadcasted_to("notifications_#{second_player}")
+            .and have_broadcasted_to("notifications_#{second_player.id}")
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
@@ -344,13 +344,13 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: false,
                       health: 20,
                       nickname: current_user_nickname,
-                      id: current_user
+                      id: current_user.id
                     ),
                     player_2: include(
                       defense_turn: false,
                       health: 20,
                       nickname: second_player_nickname,
-                      id: second_player
+                      id: second_player.id
                     )
                   )
 
@@ -371,7 +371,7 @@ RSpec.describe ::GameChannel, type: :channel do
       context 'when match is not finished' do
         it 'notifies both players to start a new round' do
           expect { restart_match }
-            .to have_broadcasted_to("notifications_#{player_performing_action}")
+            .to have_broadcasted_to("notifications_#{player_performing_action.id}")
             .with(method: "start_round", error: "Can't restart the match")
         end
       end
@@ -381,21 +381,21 @@ RSpec.describe ::GameChannel, type: :channel do
   describe 'attack' do
     describe 'success' do
       let(:password) { 'any password' }
-      let(:current_user) { SecureRandom.uuid }
+      let(:current_user) { ::ApplicationCable::User.new }
       let(:current_user_nickname) { 'a good player 1 nickname' }
-      let(:second_player) { SecureRandom.uuid }
+      let(:second_player) { ::ApplicationCable::User.new }
       let(:second_player_nickname) { 'player 2 nickname here' }
       let(:is_player_1_attack_turn) do
         Matches[password] =
-          ::Match::Model.new(player_1_id: current_user,
+          ::Match::Model.new(player_1_id: current_user.id,
                              player_1_nickname: current_user_nickname,
                              observers: [::GameChannel])
 
-        Matches[password].join(player_id: second_player, player_nickname: second_player_nickname)
-        Matches[password].start(current_user)
+        Matches[password].join(player_id: second_player.id, player_nickname: second_player_nickname)
+        Matches[password].start(current_user.id)
 
-        is_player_1_attack_turn = Matches[password].state(current_user)[:player_1][:attack_turn]
-        is_player_2_attack_turn = Matches[password].state(current_user)[:player_2][:attack_turn]
+        is_player_1_attack_turn = Matches[password].state(current_user.id)[:player_1][:attack_turn]
+        is_player_2_attack_turn = Matches[password].state(current_user.id)[:player_2][:attack_turn]
         raise unless is_player_1_attack_turn || is_player_2_attack_turn
 
         is_player_1_attack_turn
@@ -417,7 +417,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
         it 'returns match state to player one' do
           expect { attack }
-            .to have_broadcasted_to("notifications_#{current_user}")
+            .to have_broadcasted_to("notifications_#{current_user.id}")
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('end_attack_turn')
@@ -429,7 +429,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: is_player_1_attack_turn ? false : true,
                       health: 20,
                       nickname: current_user_nickname,
-                      id: current_user,
+                      id: current_user.id,
                       using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
                     ),
                     player_2: include(
@@ -438,7 +438,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: is_player_1_attack_turn ? true : false,
                       health: 20,
                       nickname: second_player_nickname,
-                      id: second_player,
+                      id: second_player.id,
                       using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
                     )
                   )
@@ -458,7 +458,7 @@ RSpec.describe ::GameChannel, type: :channel do
   
         it 'returns match state to player two' do
           expect { attack }
-            .to have_broadcasted_to("notifications_#{second_player}")
+            .to have_broadcasted_to("notifications_#{second_player.id}")
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('end_attack_turn')
@@ -470,7 +470,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: is_player_1_attack_turn ? false : true,
                       health: 20,
                       nickname: current_user_nickname,
-                      id: current_user,
+                      id: current_user.id,
                       using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
                     ),
                     player_2: include(
@@ -479,7 +479,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: is_player_1_attack_turn ? true : false,
                       health: 20,
                       nickname: second_player_nickname,
-                      id: second_player,
+                      id: second_player.id,
                       using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
                     )
                   )
@@ -503,7 +503,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
         it 'returns match state to player one' do
           expect { attack }
-            .to have_broadcasted_to("notifications_#{current_user}")
+            .to have_broadcasted_to("notifications_#{current_user.id}")
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
@@ -514,7 +514,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: false,
                       health: 20,
                       nickname: current_user_nickname,
-                      id: current_user,
+                      id: current_user.id,
                       using_cards: match_array([]),
                       cards: be_a(::Array)
                     ),
@@ -523,7 +523,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: false,
                       health: 20,
                       nickname: second_player_nickname,
-                      id: second_player,
+                      id: second_player.id,
                       using_cards: match_array([]),
                       cards: nil
                     )
@@ -540,7 +540,7 @@ RSpec.describe ::GameChannel, type: :channel do
   
         it 'returns match state to player two' do
           expect { attack }
-            .to have_broadcasted_to("notifications_#{second_player}")
+            .to have_broadcasted_to("notifications_#{second_player.id}")
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
@@ -551,7 +551,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: false,
                       health: 20,
                       nickname: current_user_nickname,
-                      id: current_user,
+                      id: current_user.id,
                       using_cards: match_array([]),
                       cards: nil
                     ),
@@ -560,7 +560,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       defense_turn: false,
                       health: 20,
                       nickname: second_player_nickname,
-                      id: second_player,
+                      id: second_player.id,
                       using_cards: match_array([]),
                       cards: be_a(::Array)
                     )
@@ -581,31 +581,31 @@ RSpec.describe ::GameChannel, type: :channel do
   describe 'defend' do
     describe 'success' do
       let(:password) { 'any password' }
-      let(:current_user) { SecureRandom.uuid }
+      let(:current_user) { ::ApplicationCable::User.new }
       let(:current_user_nickname) { 'a good player 1 nickname' }
-      let(:second_player) { SecureRandom.uuid }
+      let(:second_player) { ::ApplicationCable::User.new }
       let(:second_player_nickname) { 'player 2 nickname here' }
       let(:first_attack_cards) { attack_cards }
       let(:first_attack_cards_ids) { first_attack_cards.pluck(:id) }
       let(:is_player_1_defense_turn) do
         Matches[password] =
-          ::Match::Model.new(player_1_id: current_user,
+          ::Match::Model.new(player_1_id: current_user.id,
                              player_1_nickname: current_user_nickname,
                              observers: [::GameChannel])
 
-        Matches[password].join(player_id: second_player, player_nickname: second_player_nickname)
-        Matches[password].start(current_user)
+        Matches[password].join(player_id: second_player.id, player_nickname: second_player_nickname)
+        Matches[password].start(current_user.id)
 
-        is_player_1_attack_turn = Matches[password].state(current_user)[:player_1][:attack_turn]
+        is_player_1_attack_turn = Matches[password].state(current_user.id)[:player_1][:attack_turn]
         Matches[password].attack(
-          player_id: is_player_1_attack_turn ? current_user : second_player,
+          player_id: is_player_1_attack_turn ? current_user.id : second_player.id,
           cards: first_attack_cards_ids
         )
 
-        if is_player_1_attack_turn && Matches[password].state(current_user)[:player_1][:defense_turn]
+        if is_player_1_attack_turn && Matches[password].state(current_user.id)[:player_1][:defense_turn]
           raise StandardError, 'after player 1 attack should be player 2 defense turn'
         end
-        if !is_player_1_attack_turn && Matches[password].state(current_user)[:player_2][:defense_turn]
+        if !is_player_1_attack_turn && Matches[password].state(current_user.id)[:player_2][:defense_turn]
           raise StandardError, 'after player 2 attack should be player 1 defense turn'
         end
 
@@ -635,16 +635,16 @@ RSpec.describe ::GameChannel, type: :channel do
 
         it 'notifies that match finished' do
           expect { defend }
-            .to have_broadcasted_to("notifications_#{current_user}")
+            .to have_broadcasted_to("notifications_#{current_user.id}")
             .with(method: 'match_finished', data: { winner: is_player_1_defense_turn ? second_player_nickname : current_user_nickname })
-            .and have_broadcasted_to("notifications_#{second_player}")
+            .and have_broadcasted_to("notifications_#{second_player.id}")
             .with(method: 'match_finished', data: { winner: is_player_1_defense_turn ? second_player_nickname : current_user_nickname })
         end
       end
 
       it 'returns match state to player one' do
         expect { defend }
-          .to have_broadcasted_to("notifications_#{current_user}")
+          .to have_broadcasted_to("notifications_#{current_user.id}")
           .with(
             lambda do |payload|
               expect(payload[:method]).to eq('end_defense_turn')
@@ -655,7 +655,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     defense_turn: false,
                     health: is_player_1_defense_turn ? health_after_defense : 20,
                     nickname: current_user_nickname,
-                    id: current_user,
+                    id: current_user.id,
                     using_cards: match_array(is_player_1_defense_turn ? used_cards : first_attack_cards.map(&:as_json)),
                     cards: be_a(::Array)
                   ),
@@ -664,7 +664,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     defense_turn: false,
                     health: is_player_1_defense_turn ? 20 : health_after_defense,
                     nickname: second_player_nickname,
-                    id: second_player,
+                    id: second_player.id,
                     using_cards: match_array(is_player_1_defense_turn ? first_attack_cards.map(&:as_json) : used_cards),
                     cards: nil
                   )
@@ -682,13 +682,13 @@ RSpec.describe ::GameChannel, type: :channel do
             end
           )
 
-        expect(Matches[password].state(current_user)[:player_1][:cards].length).to eq(5)
-        expect(Matches[password].state(second_player)[:player_2][:cards].length).to eq(5)
+        expect(Matches[password].state(current_user.id)[:player_1][:cards].length).to eq(5)
+        expect(Matches[password].state(second_player.id)[:player_2][:cards].length).to eq(5)
       end
 
       it 'returns match state to player two' do
         expect { defend }
-          .to have_broadcasted_to("notifications_#{second_player}")
+          .to have_broadcasted_to("notifications_#{second_player.id}")
           .with(
             lambda do |payload|
               expect(payload[:method]).to eq('end_defense_turn')
@@ -699,7 +699,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     defense_turn: false,
                     health: is_player_1_defense_turn ? health_after_defense : 20,
                     nickname: current_user_nickname,
-                    id: current_user,
+                    id: current_user.id,
                     using_cards: match_array(is_player_1_defense_turn ? used_cards : first_attack_cards.map(&:as_json)),
                     cards: nil
                   ),
@@ -708,7 +708,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     defense_turn: false,
                     health: is_player_1_defense_turn ? 20 : health_after_defense,
                     nickname: second_player_nickname,
-                    id: second_player,
+                    id: second_player.id,
                     using_cards: match_array(is_player_1_defense_turn ? first_attack_cards.map(&:as_json) : used_cards),
                     cards: be_a(::Array)
                   )
@@ -726,8 +726,8 @@ RSpec.describe ::GameChannel, type: :channel do
             end
           )
 
-        expect(Matches[password].state(current_user)[:player_1][:cards].length).to eq(5)
-        expect(Matches[password].state(second_player)[:player_2][:cards].length).to eq(5)
+        expect(Matches[password].state(current_user.id)[:player_1][:cards].length).to eq(5)
+        expect(Matches[password].state(second_player.id)[:player_2][:cards].length).to eq(5)
       end
     end
   end

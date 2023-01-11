@@ -4,26 +4,26 @@ class GameChannel < ApplicationCable::Channel
   include Matching
 
   def subscribed
-    reject unless match.players_ids.include?(current_user)
+    reject unless match.players_ids.include?(current_user.id)
 
-    stream_from Broadcasting.private_broadcasting(current_user)
+    stream_from Broadcasting.private_broadcasting(current_user.id)
     stream_from Broadcasting.match_broadcasting(params[:password])
   end
 
   def start_round
-    Broadcasting.private_broadcast_to(current_user, { method: 'start_round', data: match.state(current_user) })
+    Broadcasting.private_broadcast_to(current_user.id, { method: 'start_round', data: match.state(current_user.id) })
   end
 
   def attack(data)
-    match.attack(player_id: current_user, cards: data['cards'])
+    match.attack(player_id: current_user.id, cards: data['cards'])
   rescue StandardError => e
-    Broadcasting.private_broadcast_to(current_user, { method: 'end_attack_turn', error: e.message })
+    Broadcasting.private_broadcast_to(current_user.id, { method: 'end_attack_turn', error: e.message })
   end
 
   def defend(data)
-    match.defend(player_id: current_user, cards: data['cards'])
+    match.defend(player_id: current_user.id, cards: data['cards'])
   rescue StandardError => e
-    Broadcasting.private_broadcast_to(current_user, { method: 'end_defense_turn', error: e.message })
+    Broadcasting.private_broadcast_to(current_user.id, { method: 'end_defense_turn', error: e.message })
   end
 
   def self.end_attack_turn(match)
@@ -52,7 +52,7 @@ class GameChannel < ApplicationCable::Channel
     match.restart
     self.class.send_match_state(match, 'start_round')
   rescue StandardError => e
-    Broadcasting.private_broadcast_to(current_user, { method: 'start_round', error: e.message })
+    Broadcasting.private_broadcast_to(current_user.id, { method: 'start_round', error: e.message })
   end
 
   private

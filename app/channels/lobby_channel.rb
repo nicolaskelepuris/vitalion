@@ -4,16 +4,16 @@ class LobbyChannel < ApplicationCable::Channel
   include Matching
 
   def subscribed
-    stream_from Broadcasting.private_broadcasting(current_user)
+    stream_from Broadcasting.private_broadcasting(current_user.id)
   end
 
   def join_lobby(data)
     return if params[:password].blank?
 
     if Matches.key? params[:password]
-      match.join(player_id: current_user, player_nickname: data['nickname'])
+      match.join(player_id: current_user.id, player_nickname: data['nickname'])
 
-      match_state = match.state(current_user)
+      match_state = match.state(current_user.id)
       player_1_id = match_state[:player_1][:id]
       player_2_id = match_state[:player_2][:id]
       match.players_ids.each do |id|
@@ -33,22 +33,22 @@ class LobbyChannel < ApplicationCable::Channel
       end
     else
       create_match(params[:password],
-                   ::Match::Model.new(player_1_id: current_user, player_1_nickname: data['nickname'],
+                   ::Match::Model.new(player_1_id: current_user.id, player_1_nickname: data['nickname'],
                                       observers: [::GameChannel]))
     end
 
-    Broadcasting.private_broadcast_to(current_user, { method: 'joined_lobby', data: { current_user_id: current_user } })
+    Broadcasting.private_broadcast_to(current_user.id, { method: 'joined_lobby', data: { current_user_id: current_user.id } })
   rescue StandardError => e
-    Broadcasting.private_broadcast_to(current_user, { method: 'joined_lobby', error: e.message })
+    Broadcasting.private_broadcast_to(current_user.id, { method: 'joined_lobby', error: e.message })
   end
 
   def start_match
-    match.start(current_user)
+    match.start(current_user.id)
     match.players_ids.each do |id|
       Broadcasting.private_broadcast_to(id, { method: 'match_started' })
     end
   rescue StandardError => e
-    Broadcasting.private_broadcast_to(current_user, { method: 'match_started', error: e.message })
+    Broadcasting.private_broadcast_to(current_user.id, { method: 'match_started', error: e.message })
   end
 
   private
