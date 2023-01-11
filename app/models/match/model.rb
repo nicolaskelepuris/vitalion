@@ -165,11 +165,12 @@ module Match
 
       if defender.dead?
         @state_machine.finish
+        end_defense_turn
       else
+        end_defense_turn
         state_machine_defend.call
       end
 
-      end_defense_turn
       end_round
     end
 

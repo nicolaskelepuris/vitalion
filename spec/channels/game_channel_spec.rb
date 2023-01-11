@@ -651,8 +651,8 @@ RSpec.describe ::GameChannel, type: :channel do
               expect(payload[:data])
                 .to include(
                   player_1: include(
-                    attack_turn: is_player_1_defense_turn ? true : false,
-                    defense_turn: false,
+                    attack_turn: false,
+                    defense_turn: is_player_1_defense_turn ? true : false,
                     health: is_player_1_defense_turn ? health_after_defense : 20,
                     nickname: current_user_nickname,
                     id: current_user.id,
@@ -660,8 +660,8 @@ RSpec.describe ::GameChannel, type: :channel do
                     cards: be_a(::Array)
                   ),
                   player_2: include(
-                    attack_turn: is_player_1_defense_turn ? false : true,
-                    defense_turn: false,
+                    attack_turn: false,
+                    defense_turn: is_player_1_defense_turn ? false : true,
                     health: is_player_1_defense_turn ? 20 : health_after_defense,
                     nickname: second_player_nickname,
                     id: second_player.id,
@@ -695,8 +695,8 @@ RSpec.describe ::GameChannel, type: :channel do
               expect(payload[:data])
                 .to include(
                   player_1: include(
-                    attack_turn: is_player_1_defense_turn ? true : false,
-                    defense_turn: false,
+                    attack_turn: false,
+                    defense_turn: is_player_1_defense_turn ? true : false,
                     health: is_player_1_defense_turn ? health_after_defense : 20,
                     nickname: current_user_nickname,
                     id: current_user.id,
@@ -704,8 +704,8 @@ RSpec.describe ::GameChannel, type: :channel do
                     cards: nil
                   ),
                   player_2: include(
-                    attack_turn: is_player_1_defense_turn ? false : true,
-                    defense_turn: false,
+                    attack_turn: false,
+                    defense_turn: is_player_1_defense_turn ? false : true,
                     health: is_player_1_defense_turn ? 20 : health_after_defense,
                     nickname: second_player_nickname,
                     id: second_player.id,
