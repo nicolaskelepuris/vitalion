@@ -7,6 +7,14 @@ class LobbyChannel < ApplicationCable::Channel
     stream_from Broadcasting.private_broadcasting(current_user.id)
   end
 
+  def unsubscribed
+    return if current_user.match.nil?
+
+    current_user.match.players_ids.each do |id|
+      ActionCable.server.remote_connections.where(current_user_id: id).disconnect
+    end
+  end
+
   def join_lobby(data)
     return if params[:password].blank?
 
