@@ -13,13 +13,15 @@ class GameChannel < ApplicationCable::Channel
   def unsubscribed
     player_match = current_user.match
 
-    return if player_match.nil?
+    if player_match.present?
+      player_match.players_ids.each do |id|
+        Broadcasting.private_broadcast_to(id, { method: 'before_disconnect' })
+        ActionCable.server.remote_connections.where(current_user_id: id).disconnect
+        Broadcasting.private_broadcast_to(id, { method: 'after_disconnect' })
+      end
 
-    player_match.players_ids.each do |id|
-      ActionCable.server.remote_connections.where(current_user_id: id).disconnect
+      delete_match(player_match.password)
     end
-
-    delete_match(player_match.password)
   end
 
   def start_round
