@@ -44,9 +44,15 @@ class LobbyChannel < ApplicationCable::Channel
         )
       end
     else
-      create_match(params[:password],
-                   ::Match::Model.new(player_1_id: current_user.id, player_1_nickname: data['nickname'],
-                                      observers: [::GameChannel]))
+      create_match(
+        params[:password],
+        ::Match::Model.new(
+          player_1_id: current_user.id,
+          player_1_nickname: data['nickname'],
+          observers: [::GameChannel],
+          password: params[:password]
+        )
+      )
     end
 
     current_user.match = match
