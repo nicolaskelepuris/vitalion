@@ -5,9 +5,9 @@ require 'rails_helper'
 RSpec.describe ::GameChannel, type: :channel do
   let!(:attack_cards) do
     [
-      Card::Record.create(name: 'card 1', attack: 1, defense: 0),
-      Card::Record.create(name: 'card 2', attack: 2, defense: 0),
-      Card::Record.create(name: 'card 3', attack: 3, defense: 0)
+      Card::Record.create(name: 'card 1', attack: 3, defense: 0),
+      Card::Record.create(name: 'card 2', attack: 4, defense: 0),
+      Card::Record.create(name: 'card 3', attack: 5, defense: 0)
     ]
   end
 
@@ -109,14 +109,14 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_1: include(
                       cards: be_a(::Array),
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: current_user_nickname,
                       id: current_user.id
                     ),
                     player_2: include(
                       cards: nil,
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: second_player_nickname,
                       id: second_player.id
                     )
@@ -151,14 +151,14 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_1: include(
                       cards: nil,
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: current_user_nickname,
                       id: current_user.id
                     ),
                     player_2: include(
                       cards: be_a(::Array),
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: second_player_nickname,
                       id: second_player.id
                     )
@@ -208,14 +208,14 @@ RSpec.describe ::GameChannel, type: :channel do
                       player_1: include(
                         cards: be_a(::Array),
                         defense_turn: false,
-                        health: is_player_1_attack_turn ? 20 : 17,
+                        health: is_player_1_attack_turn ? 40 : 31,
                         nickname: current_user_nickname,
                         id: current_user.id
                       ),
                       player_2: include(
                         cards: nil,
                         defense_turn: false,
-                        health: is_player_1_attack_turn ? 17 : 20,
+                        health: is_player_1_attack_turn ? 31 : 40,
                         nickname: second_player_nickname,
                         id: second_player.id
                       )
@@ -250,14 +250,14 @@ RSpec.describe ::GameChannel, type: :channel do
                       player_1: include(
                         cards: nil,
                         defense_turn: false,
-                        health: is_player_1_attack_turn ? 20 : 17,
+                        health: is_player_1_attack_turn ? 40 : 31,
                         nickname: current_user_nickname,
                         id: current_user.id
                       ),
                       player_2: include(
                         cards: be_a(::Array),
                         defense_turn: false,
-                        health: is_player_1_attack_turn ? 17 : 20,
+                        health: is_player_1_attack_turn ? 31 : 40,
                         nickname: second_player_nickname,
                         id: second_player.id
                       )
@@ -313,13 +313,13 @@ RSpec.describe ::GameChannel, type: :channel do
                   .to include(
                     player_1: include(
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: current_user_nickname,
                       id: current_user.id
                     ),
                     player_2: include(
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: second_player_nickname,
                       id: second_player.id
                     )
@@ -342,13 +342,13 @@ RSpec.describe ::GameChannel, type: :channel do
                   .to include(
                     player_1: include(
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: current_user_nickname,
                       id: current_user.id
                     ),
                     player_2: include(
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: second_player_nickname,
                       id: second_player.id
                     )
@@ -427,7 +427,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       cards: be_a(::Array),
                       attack_turn: false,
                       defense_turn: is_player_1_attack_turn ? false : true,
-                      health: 20,
+                      health: 40,
                       nickname: current_user_nickname,
                       id: current_user.id,
                       using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
@@ -436,7 +436,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       cards: nil,
                       attack_turn: false,
                       defense_turn: is_player_1_attack_turn ? true : false,
-                      health: 20,
+                      health: 40,
                       nickname: second_player_nickname,
                       id: second_player.id,
                       using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
@@ -468,7 +468,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       cards: nil,
                       attack_turn: false,
                       defense_turn: is_player_1_attack_turn ? false : true,
-                      health: 20,
+                      health: 40,
                       nickname: current_user_nickname,
                       id: current_user.id,
                       using_cards: match_array(is_player_1_attack_turn ? used_cards : [])
@@ -477,7 +477,7 @@ RSpec.describe ::GameChannel, type: :channel do
                       cards: be_a(::Array),
                       attack_turn: false,
                       defense_turn: is_player_1_attack_turn ? true : false,
-                      health: 20,
+                      health: 40,
                       nickname: second_player_nickname,
                       id: second_player.id,
                       using_cards: match_array(is_player_1_attack_turn ? [] : used_cards)
@@ -512,7 +512,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_1: include(
                       attack_turn: is_player_1_attack_turn ? false : true,
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: current_user_nickname,
                       id: current_user.id,
                       using_cards: match_array([]),
@@ -521,7 +521,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_2: include(
                       attack_turn: is_player_1_attack_turn ? true : false,
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: second_player_nickname,
                       id: second_player.id,
                       using_cards: match_array([]),
@@ -549,7 +549,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_1: include(
                       attack_turn: is_player_1_attack_turn ? false : true,
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: current_user_nickname,
                       id: current_user.id,
                       using_cards: match_array([]),
@@ -558,7 +558,7 @@ RSpec.describe ::GameChannel, type: :channel do
                     player_2: include(
                       attack_turn: is_player_1_attack_turn ? true : false,
                       defense_turn: false,
-                      health: 20,
+                      health: 40,
                       nickname: second_player_nickname,
                       id: second_player.id,
                       using_cards: match_array([]),
@@ -622,7 +622,7 @@ RSpec.describe ::GameChannel, type: :channel do
       end
 
       let(:turn_damage) { first_attack_cards.sum(&:attack) - defense_cards.select { |c| choosed_defense_cards_ids.include? c.id }.sum(&:defense) }
-      let(:health_after_defense) { 20 - turn_damage }
+      let(:health_after_defense) { 40 - turn_damage }
 
       subject(:defend) { perform :defend, cards: choosed_attack_cards_ids + choosed_defense_cards_ids }
 
@@ -653,7 +653,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   player_1: include(
                     attack_turn: false,
                     defense_turn: is_player_1_defense_turn ? true : false,
-                    health: is_player_1_defense_turn ? health_after_defense : 20,
+                    health: is_player_1_defense_turn ? health_after_defense : 40,
                     nickname: current_user_nickname,
                     id: current_user.id,
                     using_cards: match_array(is_player_1_defense_turn ? used_cards : first_attack_cards.map(&:as_json)),
@@ -662,7 +662,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   player_2: include(
                     attack_turn: false,
                     defense_turn: is_player_1_defense_turn ? false : true,
-                    health: is_player_1_defense_turn ? 20 : health_after_defense,
+                    health: is_player_1_defense_turn ? 40 : health_after_defense,
                     nickname: second_player_nickname,
                     id: second_player.id,
                     using_cards: match_array(is_player_1_defense_turn ? first_attack_cards.map(&:as_json) : used_cards),
@@ -697,7 +697,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   player_1: include(
                     attack_turn: false,
                     defense_turn: is_player_1_defense_turn ? true : false,
-                    health: is_player_1_defense_turn ? health_after_defense : 20,
+                    health: is_player_1_defense_turn ? health_after_defense : 40,
                     nickname: current_user_nickname,
                     id: current_user.id,
                     using_cards: match_array(is_player_1_defense_turn ? used_cards : first_attack_cards.map(&:as_json)),
@@ -706,7 +706,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   player_2: include(
                     attack_turn: false,
                     defense_turn: is_player_1_defense_turn ? false : true,
-                    health: is_player_1_defense_turn ? 20 : health_after_defense,
+                    health: is_player_1_defense_turn ? 40 : health_after_defense,
                     nickname: second_player_nickname,
                     id: second_player.id,
                     using_cards: match_array(is_player_1_defense_turn ? first_attack_cards.map(&:as_json) : used_cards),
