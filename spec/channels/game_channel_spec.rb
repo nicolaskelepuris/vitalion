@@ -65,7 +65,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
         before { stub_connection current_user: another_player }
 
-        it 'subscribes' do
+        it 'subscription is rejected' do
           subscribe_to_game
 
           expect(subscription).to be_rejected

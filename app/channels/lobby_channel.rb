@@ -37,6 +37,8 @@ class LobbyChannel < ApplicationCable::Channel
                                       observers: [::GameChannel]))
     end
 
+    current_user.match = match
+
     Broadcasting.private_broadcast_to(current_user.id, { method: 'joined_lobby', data: { current_user_id: current_user.id } })
   rescue StandardError => e
     Broadcasting.private_broadcast_to(current_user.id, { method: 'joined_lobby', error: e.message })

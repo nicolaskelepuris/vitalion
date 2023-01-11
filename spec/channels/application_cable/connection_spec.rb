@@ -9,6 +9,7 @@ RSpec.describe ::ApplicationCable::Connection, type: :channel do
         connect '/cable'
 
         expect(connection.current_user.id).to match(/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/)
+        expect(connection.current_user.id).to eq(connection.current_user_id)
       end
     end
   end

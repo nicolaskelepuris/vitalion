@@ -10,6 +10,14 @@ class GameChannel < ApplicationCable::Channel
     stream_from Broadcasting.match_broadcasting(params[:password])
   end
 
+  def unsubscribed
+    return if current_user.match.nil?
+
+    current_user.match.players_ids.each do |id|
+      ActionCable.server.remote_connections.where(current_user_id: id).disconnect
+    end
+  end
+
   def start_round
     Broadcasting.private_broadcast_to(current_user.id, { method: 'start_round', data: match.state(current_user.id) })
   end
