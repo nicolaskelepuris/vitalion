@@ -32,6 +32,30 @@ RSpec.describe ::LobbyChannel, type: :channel do
     end
   end
 
+  describe 'unsubscribe' do
+    describe 'success' do
+      let(:current_user) { ::ApplicationCable::User.new }
+      let(:password) { 'any password' }
+      let(:nickname) { 'a good nickname' }
+
+      before do
+        stub_connection(current_user:)
+        subscribe(password:)
+        perform(:join_lobby, password:, nickname:)
+      end
+
+      subject(:unsubscribe_from_lobby) { unsubscribe }
+
+      it 'deletes the match' do
+        expect(Matches['any password'].players_ids).to match_array([current_user.id])
+
+        unsubscribe_from_lobby
+
+        expect(Matches['any password']).to eq(nil)
+      end
+    end
+  end
+
   describe 'join_lobby' do
     describe 'success' do
       let(:current_user) { ::ApplicationCable::User.new }
