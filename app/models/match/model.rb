@@ -51,6 +51,8 @@ module Match
     end
 
     def players_ids
+      [@player_1.id] if @player_2.nil?
+
       [@player_1.id, @player_2.id]
     end
 
