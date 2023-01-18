@@ -57,7 +57,7 @@ class LobbyChannel < ApplicationCable::Channel
 
     current_user.match = match
 
-    share_url = URI::HTTPS.build(host: ENV.fetch('FRONTEND_URL'), query: "password=#{params[:password]}")
+    share_url = URI::HTTPS.build(host: ENV.fetch('FRONTEND_HOST'), path: ENV.fetch('FRONTEND_PATH'), query: "password=#{params[:password]}")
     Broadcasting.private_broadcast_to(current_user.id, { method: 'joined_lobby', data: { current_user_id: current_user.id, share_url: share_url } })
   rescue StandardError => e
     Broadcasting.private_broadcast_to(current_user.id, { method: 'joined_lobby', error: e.message })
