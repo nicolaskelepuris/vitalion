@@ -91,7 +91,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
           it 'sends current user id to user' do
             expect { join_lobby }
               .to have_broadcasted_to("notifications_#{current_user.id}")
-              .with(method: 'joined_lobby', data: { current_user_id: current_user.id })
+              .with(method: 'joined_lobby', data: { current_user_id: current_user.id, share_url: "https://localhost?password=any%20password" })
           end
         end
 
@@ -145,7 +145,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
           it 'sends current user id to second player' do
             expect { join_lobby }
               .to have_broadcasted_to("notifications_#{current_user.id}")
-              .with(method: 'joined_lobby', data: { current_user_id: current_user.id })
+              .with(method: 'joined_lobby', data: { current_user_id: current_user.id, share_url: "https://localhost?password=any%20password" })
               .and have_broadcasted_to("notifications_#{first_player.id}")
               .with(
                 method: 'waiting_to_start_match',

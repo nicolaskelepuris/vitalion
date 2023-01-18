@@ -44,6 +44,7 @@ group :development, :test do
   gem 'debug', platforms: %i[mri mingw x64_mingw]
   gem 'rspec-rails', '~> 6.0', '>= 6.0.1'
   gem 'rubocop', '~> 1.41'
+  gem 'dotenv-rails', '~> 2.8', '>= 2.8.1'
 end
 
 group :development do
