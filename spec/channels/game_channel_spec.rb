@@ -645,6 +645,17 @@ RSpec.describe ::GameChannel, type: :channel do
         end
       end
 
+      context 'when player defends with no cards' do
+        subject(:defend) { perform :defend, cards: [[choosed_attack_cards_ids], nil, []].sample }
+        
+        it 'both players ends with 5 cards' do
+          defend
+
+          expect(Matches[password].state(current_user.id)[:player_1][:cards].length).to eq(5)
+          expect(Matches[password].state(second_player.id)[:player_2][:cards].length).to eq(5)
+        end
+      end
+
       it 'returns match state to player one' do
         expect { defend }
           .to have_broadcasted_to("notifications_#{current_user.id}")

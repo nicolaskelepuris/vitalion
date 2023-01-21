@@ -33,8 +33,9 @@ module Player
       receive_damage(attack - defense)
     end
 
-    def refill_cards(all_cards:)
-      count_to_refill = [@using_cards.length, 1].max
+    def refill_cards(all_cards:, was_defense_turn: false)
+      cards_to_add_if_empty_cards = was_defense_turn ? 0 : 1
+      count_to_refill = [@using_cards.length, cards_to_add_if_empty_cards].max
 
       @cards.push(*all_cards.sample(count_to_refill))
 

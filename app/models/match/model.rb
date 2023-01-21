@@ -174,13 +174,15 @@ module Match
 
       if defender.dead?
         @state_machine.finish
+
         end_defense_turn
       else
         end_defense_turn
-        state_machine_defend.call
-      end
 
-      end_round
+        state_machine_defend.call
+
+        end_round(defender: defender, attacker: attacker)
+      end
     end
 
     def player_1_defend(cards)
@@ -203,8 +205,9 @@ module Match
       )
     end
 
-    def end_round
-      [@player_1, @player_2].each { |player| player.refill_cards(all_cards: @cards) }
+    def end_round(defender:, attacker:)
+      defender.refill_cards(all_cards: @cards, was_defense_turn: true)
+      attacker.refill_cards(all_cards: @cards, was_defense_turn: false)
     end
   end
 end
