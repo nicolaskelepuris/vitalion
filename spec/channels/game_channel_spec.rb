@@ -132,7 +132,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_1[:cards].length).to eq(5)
 
                 expect(player_1[:defense_turn]).to eq(false)
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:id]).to eq(current_user.id)
                 expect(player_1[:nickname]).to eq(current_user_nickname)
                 expect(player_1[:using_cards]).to eq([])
@@ -141,7 +141,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
                 expect(player_2[:cards]).to eq(nil)
                 expect(player_2[:defense_turn]).to eq(false)
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:id]).to eq(second_player.id)
                 expect(player_2[:nickname]).to eq(second_player_nickname)
                 expect(player_2[:using_cards]).to eq([])
@@ -169,7 +169,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
                 expect(player_1[:cards]).to eq(nil)
                 expect(player_1[:defense_turn]).to eq(false)
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:id]).to eq(current_user.id)
                 expect(player_1[:nickname]).to eq(current_user_nickname)
                 expect(player_1[:using_cards]).to eq([])
@@ -180,7 +180,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_2[:cards].length).to eq(5)
 
                 expect(player_2[:defense_turn]).to eq(false)
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:id]).to eq(second_player.id)
                 expect(player_2[:nickname]).to eq(second_player_nickname)
                 expect(player_2[:using_cards]).to eq([])
@@ -239,7 +239,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   expect(player_1[:using_cards]).to eq([])
 
                   if attacking_player_id == current_user.id
-                    expect(player_1[:health]).to eq(25)
+                    expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                     expect(player_1[:attack_turn]).to eq(false)
                   else
                     expect(player_1[:health]).to eq(20)
@@ -255,7 +255,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   expect(player_2[:using_cards]).to eq([])
 
                   if attacking_player_id == second_player.id
-                    expect(player_2[:health]).to eq(25)
+                    expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                     expect(player_2[:attack_turn]).to eq(false)
                   else
                     expect(player_2[:health]).to eq(20)
@@ -288,7 +288,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   expect(player_1[:using_cards]).to eq([])
 
                   if attacking_player_id == current_user.id
-                    expect(player_1[:health]).to eq(25)
+                    expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                     expect(player_1[:attack_turn]).to eq(false)
                   else
                     expect(player_1[:health]).to eq(20)
@@ -306,7 +306,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   expect(player_2[:using_cards]).to eq([])
                   
                   if attacking_player_id == second_player.id
-                    expect(player_2[:health]).to eq(25)
+                    expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                     expect(player_2[:attack_turn]).to eq(false)
                   else
                     expect(player_2[:health]).to eq(20)
@@ -358,7 +358,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_1[:cards].length).to eq(5)
 
                 expect(player_1[:defense_turn]).to eq(false)
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:id]).to eq(current_user.id)
                 expect(player_1[:nickname]).to eq(current_user_nickname)
                 expect(player_1[:using_cards]).to eq([])
@@ -367,7 +367,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
                 expect(player_2[:cards]).to eq(nil)
                 expect(player_2[:defense_turn]).to eq(false)
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:id]).to eq(second_player.id)
                 expect(player_2[:nickname]).to eq(second_player_nickname)
                 expect(player_2[:using_cards]).to eq([])
@@ -384,7 +384,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
                 expect(player_1[:cards]).to eq(nil)
                 expect(player_1[:defense_turn]).to eq(false)
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:id]).to eq(current_user.id)
                 expect(player_1[:nickname]).to eq(current_user_nickname)
                 expect(player_1[:using_cards]).to eq([])
@@ -395,7 +395,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_2[:cards].length).to eq(5)
 
                 expect(player_2[:defense_turn]).to eq(false)
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:id]).to eq(second_player.id)
                 expect(player_2[:nickname]).to eq(second_player_nickname)
                 expect(player_2[:using_cards]).to eq([])
@@ -471,7 +471,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
                 expect(::Card::Record.pluck(:id)).to include(*player_1[:cards].pluck(:id))
 
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:id]).to eq(current_user.id)
                 expect(player_1[:nickname]).to eq(current_user_nickname)
                 expect(player_1[:attack_turn]).to eq(false)
@@ -489,7 +489,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 player_2 = payload[:data][:player_2]
 
                 expect(player_2[:cards]).to eq(nil)
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:id]).to eq(second_player.id)
                 expect(player_2[:nickname]).to eq(second_player_nickname)
                 expect(player_2[:attack_turn]).to eq(false)
@@ -515,7 +515,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 player_1 = payload[:data][:player_1]
                 
                 expect(player_1[:cards]).to eq(nil)
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:id]).to eq(current_user.id)
                 expect(player_1[:nickname]).to eq(current_user_nickname)
                 expect(player_1[:attack_turn]).to eq(false)
@@ -532,7 +532,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
                 expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck(:id))
 
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:id]).to eq(second_player.id)
                 expect(player_2[:nickname]).to eq(second_player_nickname)
                 expect(player_1[:attack_turn]).to eq(false)
@@ -669,7 +669,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
                 expect(::Card::Record.pluck(:id)).to include(*player_1[:cards].pluck(:id))
 
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:id]).to eq(current_user.id)
                 expect(player_1[:nickname]).to eq(current_user_nickname)
                 expect(player_1[:defense_turn]).to eq(false)
@@ -686,7 +686,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 player_2 = payload[:data][:player_2]
 
                 expect(player_2[:cards]).to eq(nil)
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:id]).to eq(second_player.id)
                 expect(player_2[:nickname]).to eq(second_player_nickname)
                 expect(player_2[:defense_turn]).to eq(false)
@@ -711,7 +711,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 player_1 = payload[:data][:player_1]
 
                 expect(player_1[:cards]).to eq(nil)
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:id]).to eq(current_user.id)
                 expect(player_1[:nickname]).to eq(current_user_nickname)
                 expect(player_1[:defense_turn]).to eq(false)
@@ -727,7 +727,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
                 expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck(:id))
                 
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:id]).to eq(second_player.id)
                 expect(player_2[:nickname]).to eq(second_player_nickname)
                 expect(player_2[:defense_turn]).to eq(false)
@@ -798,7 +798,7 @@ RSpec.describe ::GameChannel, type: :channel do
       let(:turn_attack) { 12 }
       let(:turn_defense) { 7 }
       let(:turn_damage) { 5 }
-      let(:health_after_defense) { 25 - turn_damage }
+      let(:health_after_defense) { ::Player::INITIAL_HEALTH - turn_damage }
 
       subject(:defend) { perform :defend, cards: cards_used_in_defense_turn }
 
@@ -854,7 +854,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_1[:using_cards]).to match_array(valid_used_cards)
                 expect(player_1[:defense_turn]).to eq(true)
               else
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:using_cards]).to match_array(valid_used_attack_cards)
                 expect(player_1[:defense_turn]).to eq(false)
               end
@@ -871,7 +871,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_2[:using_cards]).to match_array(valid_used_cards)
                 expect(player_2[:defense_turn]).to eq(true)
               else
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:using_cards]).to match_array(valid_used_attack_cards)
                 expect(player_2[:defense_turn]).to eq(false)
               end
@@ -901,7 +901,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_1[:using_cards]).to match_array(valid_used_cards)
                 expect(player_1[:defense_turn]).to eq(true)
               else
-                expect(player_1[:health]).to eq(25)
+                expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_1[:using_cards]).to match_array(valid_used_attack_cards)
                 expect(player_1[:defense_turn]).to eq(false)
               end
@@ -922,7 +922,7 @@ RSpec.describe ::GameChannel, type: :channel do
                 expect(player_2[:using_cards]).to match_array(valid_used_cards)
                 expect(player_2[:defense_turn]).to eq(true)
               else
-                expect(player_2[:health]).to eq(25)
+                expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(player_2[:using_cards]).to match_array(valid_used_attack_cards)
                 expect(player_2[:defense_turn]).to eq(false)
               end

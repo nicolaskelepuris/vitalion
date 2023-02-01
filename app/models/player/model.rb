@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Player
+  INITIAL_HEALTH = 25
+
   class Model
     attr_reader :id, :health, :nickname
 
@@ -8,7 +10,7 @@ module Player
       @id = id
       @nickname = nickname || 'N/A'
       @cards = cards
-      @health = 25
+      @health = INITIAL_HEALTH
       @using_cards = []
     end
 

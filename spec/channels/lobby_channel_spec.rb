@@ -98,7 +98,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
             expect(player_1[:attack_turn]).to eq(false)
             expect(player_1[:defense_turn]).to eq(false)
-            expect(player_1[:health]).to eq(25)
+            expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
             expect(player_1[:id]).to eq(current_user.id)
             expect(player_1[:nickname]).to eq(nickname)
             expect(player_1[:using_cards]).to eq([])
@@ -146,7 +146,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
             expect(player_1[:cards]).to eq(nil)
             expect(player_1[:attack_turn]).to eq(false)
             expect(player_1[:defense_turn]).to eq(false)
-            expect(player_1[:health]).to eq(25)
+            expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
             expect(player_1[:id]).to eq(first_player.id)
             expect(player_1[:nickname]).to eq(first_player_nickname)
             expect(player_1[:using_cards]).to eq([])
@@ -158,7 +158,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
             expect(player_2[:attack_turn]).to eq(false)
             expect(player_2[:defense_turn]).to eq(false)
-            expect(player_2[:health]).to eq(25)
+            expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
             expect(player_2[:id]).to eq(current_user.id)
             expect(player_2[:nickname]).to eq(nickname)
             expect(player_2[:using_cards]).to eq([])
