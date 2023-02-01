@@ -20,7 +20,13 @@ module Player
       @using_cards = get_valid_attack_cards(cards)
       @cards = remove_used_cards
 
-      { skipped_attack: @using_cards.empty? }
+      used_health_potion = @using_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
+
+      if used_health_potion
+        @health = [health + @using_cards.sum(&:value), 25].min
+      end
+
+      { skipped_attack: @using_cards.empty? || used_health_potion }
     end
 
     def defend(attacker:, defense_cards:)
@@ -53,13 +59,20 @@ module Player
     private
 
     def get_valid_attack_cards(cards)
-      valid_cards = @cards.select { |card| cards.include?(card.id) && card.is_a?(::Card::Weapon) }.uniq
+      valid_cards = @cards.select { |card| cards.include?(card.id) && (card.is_a?(::Card::Weapon) || card.is_a?(::Card::HealthPotion)) }.uniq
+
+      return [get_max_health_potion(valid_cards)] if valid_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
+
       non_stackables = valid_cards.reject(&:stackable)
 
       return valid_cards unless non_stackables.length > 1
 
       non_stackable = non_stackables.max_by(&:value)
       valid_cards.select(&:stackable) << non_stackable
+    end
+
+    def get_max_health_potion(cards)
+      cards.select { |c| c.is_a?(::Card::HealthPotion) }.max_by(&:value)
     end
 
     def remove_used_cards
