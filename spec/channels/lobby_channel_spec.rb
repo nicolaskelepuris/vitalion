@@ -4,13 +4,17 @@ require 'rails_helper'
 
 RSpec.describe ::LobbyChannel, type: :channel do
   before do
-    Card::Record.create(name: 'card 1', attack: 2, defense: 0)
-    Card::Record.create(name: 'card 2', attack: 5, defense: 0)
-    Card::Record.create(name: 'card 3', attack: 15, defense: 0)
-    Card::Record.create(name: 'card 4', attack: 0, defense: 1)
-    Card::Record.create(name: 'card 5', attack: 0, defense: 4)
-    Card::Record.create(name: 'card 6', attack: 0, defense: 1)
-    Card::Record.create(name: 'card 7', attack: 0, defense: 4)
+    Card::Weapon.create(name: 'weapon 1', value: 2)
+    Card::Weapon.create(name: 'weapon 2', value: 5)
+    Card::Weapon.create(name: 'weapon 3', value: 15)
+
+    Card::Armor.create(name: 'armor 1', value: 1)
+    Card::Armor.create(name: 'armor 2', value: 4)
+    Card::Armor.create(name: 'armor 3', value: 1)
+    Card::Armor.create(name: 'armor 4', value: 4)
+
+    Card::HealthPotion.create(name: 'health potion 1', value: 3)
+    Card::HealthPotion.create(name: 'health potion 2', value: 5)
   end
 
   describe 'subscribe' do
@@ -83,33 +87,29 @@ RSpec.describe ::LobbyChannel, type: :channel do
             join_lobby
 
             # Then
-            match = Matches[password]
-            player_1_cards = match.state(current_user.id)[:player_1][:cards]
+            match_state = Matches[password].state(current_user.id)
 
-            expect(::Card::Record.pluck(:id)).to include(*player_1_cards.pluck(:id))
-            expect(player_1_cards.length).to eq(5)
+            player_1 = match_state[:player_1]
 
-            expect(match.state(current_user.id))
-              .to include(
-                player_1: include(
-                  cards: be_a(::Array),
-                  attack_turn: false,
-                  defense_turn: false,
-                  health: 25,
-                  id: current_user.id,
-                  nickname: nickname,
-                  using_cards: []
-                ),
-                player_2: {
-                  cards: nil,
-                  attack_turn: false,
-                  defense_turn: false,
-                  health: nil,
-                  id: nil,
-                  nickname: nil,
-                  using_cards: []
-                }
-              )
+            expect(::Card::Record.pluck(:id)).to include(*player_1[:cards].pluck(:id))
+            expect(player_1[:cards].length).to eq(5)
+
+            expect(player_1[:attack_turn]).to eq(false)
+            expect(player_1[:defense_turn]).to eq(false)
+            expect(player_1[:health]).to eq(25)
+            expect(player_1[:id]).to eq(current_user.id)
+            expect(player_1[:nickname]).to eq(nickname)
+            expect(player_1[:using_cards]).to eq([])
+
+            player_2 = match_state[:player_2]
+
+            expect(player_2[:cards]).to eq(nil)
+            expect(player_2[:attack_turn]).to eq(false)
+            expect(player_2[:defense_turn]).to eq(false)
+            expect(player_2[:health]).to eq(nil)
+            expect(player_2[:id]).to eq(nil)
+            expect(player_2[:nickname]).to eq(nil)
+            expect(player_2[:using_cards]).to eq([])
           end
 
           it 'sends current user id to user' do
@@ -137,33 +137,29 @@ RSpec.describe ::LobbyChannel, type: :channel do
             join_lobby
 
             # Then
-            match = Matches[password]
-            player_2_cards = match.state(current_user.id)[:player_2][:cards]
+            match_state = Matches[password].state(current_user.id)
 
-            expect(::Card::Record.pluck(:id)).to include(*player_2_cards.pluck(:id))
-            expect(player_2_cards.length).to eq(5)
+            player_1 = match_state[:player_1]
 
-            expect(match.state(current_user.id))
-              .to include(
-                player_1: eq(
-                  cards: nil,
-                  attack_turn: false,
-                  defense_turn: false,
-                  health: 25,
-                  id: first_player.id,
-                  nickname: first_player_nickname,
-                  using_cards: []
-                ),
-                player_2: include(
-                  cards: be_a(::Array),
-                  attack_turn: false,
-                  defense_turn: false,
-                  health: 25,
-                  id: current_user.id,
-                  nickname:,
-                  using_cards: []
-                )
-              )
+            expect(player_1[:cards]).to eq(nil)
+            expect(player_1[:attack_turn]).to eq(false)
+            expect(player_1[:defense_turn]).to eq(false)
+            expect(player_1[:health]).to eq(25)
+            expect(player_1[:id]).to eq(first_player.id)
+            expect(player_1[:nickname]).to eq(first_player_nickname)
+            expect(player_1[:using_cards]).to eq([])
+
+            player_2 = match_state[:player_2]
+
+            expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck(:id))
+            expect(player_2[:cards].length).to eq(5)
+
+            expect(player_2[:attack_turn]).to eq(false)
+            expect(player_2[:defense_turn]).to eq(false)
+            expect(player_2[:health]).to eq(25)
+            expect(player_2[:id]).to eq(current_user.id)
+            expect(player_2[:nickname]).to eq(nickname)
+            expect(player_2[:using_cards]).to eq([])
           end
 
           it 'sends current user id to second player' do
@@ -215,7 +211,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
       subject(:start_match) { perform :start_match, password: }
 
-      it 'starts the match' do
+      it 'starts the match with random player attack turn set to true' do
         # When
         start_match
 
