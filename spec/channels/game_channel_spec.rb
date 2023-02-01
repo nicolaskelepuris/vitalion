@@ -797,7 +797,8 @@ RSpec.describe ::GameChannel, type: :channel do
 
       let(:turn_attack) { 12 }
       let(:turn_defense) { 7 }
-      let(:health_after_defense) { 25 - turn_attack + turn_defense }
+      let(:turn_damage) { 5 }
+      let(:health_after_defense) { 25 - turn_damage }
 
       subject(:defend) { perform :defend, cards: cards_used_in_defense_turn }
 
@@ -930,6 +931,123 @@ RSpec.describe ::GameChannel, type: :channel do
 
         expect(match.state(current_user.id)[:player_1][:cards].length).to eq(5)
         expect(match.state(second_player.id)[:player_2][:cards].length).to eq(5)
+      end
+
+      context 'when player uses health potion to defend' do
+        let!(:defending_player_cards) { [weapons[0], weapons[0], armors[0], health_potions[0], health_potions[1]] }
+        let!(:cards_used_in_defense_turn) { defending_player_cards.pluck(:id) }
+        let!(:valid_used_cards) { [health_potions[1]].map { |c| ::Card::Serializer.call(c) } }
+        let(:turn_defense) { 0 }
+        let(:turn_damage) { 12 }
+        let(:health_granted) { health_potions[1].value }
+        let(:health_after_defense) { 25 - turn_damage + health_granted  }
+
+        it 'returns match state to player one' do
+          expect { defend }
+            .to have_broadcasted_to("notifications_#{current_user.id}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('end_defense_turn')
+  
+                player_1 = payload[:data][:player_1]
+  
+                expect(::Card::Record.pluck(:id)).to include(*player_1[:cards].pluck(:id))
+  
+                
+  
+                expect(player_1[:id]).to eq(current_user.id)
+                expect(player_1[:nickname]).to eq(current_user_nickname)
+                expect(player_1[:attack_turn]).to eq(false)
+  
+                if defending_player_id == current_user.id
+                  expect(player_1[:cards])
+                    .to match_array([weapons[0], weapons[0], armors[0], health_potions[0]].map { |c| ::Card::Serializer.call(c) })
+                    
+                  expect(player_1[:health]).to eq(health_after_defense)
+                  expect(player_1[:using_cards]).to match_array(valid_used_cards)
+                  expect(player_1[:defense_turn]).to eq(true)
+                else
+                  expect(player_1[:cards])
+                    .to match_array([weapons[0], armors[0], health_potions[0]].map { |c| ::Card::Serializer.call(c) })
+                  expect(player_1[:health]).to eq(25)
+                  expect(player_1[:using_cards]).to match_array(valid_used_attack_cards)
+                  expect(player_1[:defense_turn]).to eq(false)
+                end
+  
+                player_2 = payload[:data][:player_2]
+  
+                expect(player_2[:cards]).to eq(nil)
+                expect(player_2[:id]).to eq(second_player.id)
+                expect(player_2[:nickname]).to eq(second_player_nickname)
+                expect(player_2[:attack_turn]).to eq(false)
+  
+                if defending_player_id == second_player.id
+                  expect(player_2[:health]).to eq(health_after_defense)
+                  expect(player_2[:using_cards]).to match_array(valid_used_cards)
+                  expect(player_2[:defense_turn]).to eq(true)
+                else
+                  expect(player_2[:health]).to eq(25)
+                  expect(player_2[:using_cards]).to match_array(valid_used_attack_cards)
+                  expect(player_2[:defense_turn]).to eq(false)
+                end
+              end
+            )
+  
+          expect(match.state(current_user.id)[:player_1][:cards].length).to eq(5)
+          expect(match.state(second_player.id)[:player_2][:cards].length).to eq(5)
+        end
+  
+        it 'returns match state to player two' do
+          expect { defend }
+            .to have_broadcasted_to("notifications_#{second_player.id}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('end_defense_turn')
+  
+                player_1 = payload[:data][:player_1]
+  
+                expect(player_1[:cards]).to eq(nil)
+                expect(player_1[:id]).to eq(current_user.id)
+                expect(player_1[:nickname]).to eq(current_user_nickname)
+                expect(player_1[:attack_turn]).to eq(false)
+  
+                if defending_player_id == current_user.id
+                  expect(player_1[:health]).to eq(health_after_defense)
+                  expect(player_1[:using_cards]).to match_array(valid_used_cards)
+                  expect(player_1[:defense_turn]).to eq(true)
+                else
+                  expect(player_1[:health]).to eq(25)
+                  expect(player_1[:using_cards]).to match_array(valid_used_attack_cards)
+                  expect(player_1[:defense_turn]).to eq(false)
+                end
+  
+                player_2 = payload[:data][:player_2]
+  
+                expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck(:id))
+  
+                expect(player_2[:id]).to eq(second_player.id)
+                expect(player_2[:nickname]).to eq(second_player_nickname)
+                expect(player_2[:attack_turn]).to eq(false)
+  
+                if defending_player_id == second_player.id
+                  expect(player_2[:cards])
+                    .to match_array([weapons[0], weapons[0], armors[0], health_potions[0]].map { |c| ::Card::Serializer.call(c) })
+                  expect(player_2[:health]).to eq(health_after_defense)
+                  expect(player_2[:using_cards]).to match_array(valid_used_cards)
+                  expect(player_2[:defense_turn]).to eq(true)
+                else
+                  expect(player_2[:cards])
+                    .to match_array([weapons[0], armors[0], health_potions[0]].map { |c| ::Card::Serializer.call(c) })
+                  expect(player_2[:health]).to eq(25)
+                  expect(player_2[:using_cards]).to match_array(valid_used_attack_cards)
+                  expect(player_2[:defense_turn]).to eq(false)
+                end
+              end
+            )
+  
+          expect(match.state(current_user.id)[:player_1][:cards].length).to eq(5)
+          expect(match.state(second_player.id)[:player_2][:cards].length).to eq(5)
+        end
       end
     end
   end
