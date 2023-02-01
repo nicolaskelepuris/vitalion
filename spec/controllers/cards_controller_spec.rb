@@ -4,10 +4,12 @@ require 'rails_helper'
 
 RSpec.describe CardsController, type: :request do
   describe 'GET /cards' do
-    before do
-      ::Card::Record.create(name: 'card 1', attack: 2, defense: 0)
-      ::Card::Record.create(name: 'card 2', attack: 5, defense: 0)
-      ::Card::Record.create(name: 'card 3', attack: 15, defense: 0)
+    let!(:cards) do
+      [
+        ::Card::Weapon.create(name: 'card 1', value: 2),
+        ::Card::Armor.create(name: 'card 2', value: 5),
+        ::Card::HealthPotion.create(name: 'card 3', value: 15)
+      ]
     end
 
     subject(:list_cards) { get '/cards' }
@@ -17,7 +19,27 @@ RSpec.describe CardsController, type: :request do
 
       expect(response.status).to eq(200)
       expect(json['data'].length).to eq(3)
-      expect(json['data'][0].keys).to match_array(%w[attack defense id name])
+
+      expect(json['data'][0]).to eq({
+        'id' => cards[0].id,
+        'name' => 'card 1',
+        'value' => 2,
+        'type' => 'weapon',
+      })
+
+      expect(json['data'][1]).to eq({
+        'id' => cards[1].id,
+        'name' => 'card 2',
+        'value' => 5,
+        'type' => 'armor',
+      })
+
+      expect(json['data'][2]).to eq({
+        'id' => cards[2].id,
+        'name' => 'card 3',
+        'value' => 15,
+        'type' => 'health potion',
+      })
     end
   end
 end
