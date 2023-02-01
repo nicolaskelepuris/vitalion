@@ -8,6 +8,7 @@ require_relative '../config/environment'
 abort('The Rails environment is running in production mode!') if Rails.env.production?
 require 'rspec/rails'
 require 'request_helpers'
+require_relative '../app/channels/matching'
 require 'database_cleaner/active_record'
 DatabaseCleaner.strategy = :transaction
 DatabaseCleaner.clean_with :truncation
