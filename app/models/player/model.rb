@@ -23,7 +23,7 @@ module Player
       used_health_potion = @using_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
 
       if used_health_potion
-        @health = [@health + @using_cards.sum(&:value), 25].min
+        @health += @using_cards.sum(&:value)
       end
 
       { skipped_attack: @using_cards.empty? || used_health_potion }
