@@ -63,24 +63,32 @@ module Player
     private
 
     def get_valid_attack_cards(cards)
-      valid_cards = @cards.select { |card| cards.include?(card.id) && (card.is_a?(::Card::Weapon) || card.is_a?(::Card::HealthPotion)) }.uniq
+      valid_cards = @cards.select { |card| cards.include?(card.id) && valid_attack_cards_types.has_key?(card.type) }.uniq
 
       return [get_max_health_potion(valid_cards)] if valid_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
 
-      non_stackables = valid_cards.reject(&:stackable)
+      non_stackables = valid_cards.select { |c| c.is_a?(::Card::Weapon) }
 
       return valid_cards unless non_stackables.length > 1
 
       non_stackable = non_stackables.max_by(&:value)
-      valid_cards.select(&:stackable) << non_stackable
+      valid_cards.select { |c| c.is_a?(::Card::StackableWeapon) } << non_stackable
+    end
+
+    def valid_attack_cards_types
+      [::Card::Weapon, ::Card::StackableWeapon, ::Card::HealthPotion].to_h { |type| [type.to_s, true] }
     end
 
     def get_valid_defense_cards(cards)
-      valid_cards = @cards.select { |card| cards.include?(card.id) && (card.is_a?(::Card::Armor) || card.is_a?(::Card::HealthPotion)) }.uniq
+      valid_cards = @cards.select { |card| cards.include?(card.id) && valid_defense_cards_types.has_key?(card.type) }.uniq
 
       return [get_max_health_potion(valid_cards)] if valid_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
 
       valid_cards
+    end
+
+    def valid_defense_cards_types
+      [::Card::Armor, ::Card::HealthPotion].to_h { |type| [type.to_s, true] }
     end
 
     def get_max_health_potion(cards)

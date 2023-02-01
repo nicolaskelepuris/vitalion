@@ -3,7 +3,7 @@ module Card
     extend self
 
     def call(card)
-      card.as_json(only: %i[id name value url stackable]).merge(type: format_type(card.type))
+      card.as_json(only: %i[id name value url]).merge(type: format_type(card.type))
     end
 
     private
@@ -16,6 +16,8 @@ module Card
         'armor'
       when Card::HealthPotion.to_s
         'health potion'
+      when Card::StackableWeapon.to_s
+        'stackable weapon'
       else
         'N/A'
       end

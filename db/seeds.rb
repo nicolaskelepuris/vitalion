@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
 if Card::Record.count.zero?
-  Card::Weapon.create(name: 'weapon 1', value: 2, stackable: true)
-  Card::Weapon.create(name: 'weapon 2', value: 3, stackable: true)
-  Card::Weapon.create(name: 'weapon 3', value: 4, stackable: true)
-  Card::Weapon.create(name: 'weapon 5', value: 5)
-  Card::Weapon.create(name: 'weapon 6', value: 8)
-  Card::Weapon.create(name: 'weapon 7', value: 10)
-  Card::Weapon.create(name: 'weapon 8', value: 18)
+  Card::StackableWeapon.create(name: 'stackable weapon 1', value: 2)
+  Card::StackableWeapon.create(name: 'stackable weapon 2', value: 3)
+  Card::StackableWeapon.create(name: 'stackable weapon 3', value: 4)
+  
+  Card::Weapon.create(name: 'weapon 1', value: 5)
+  Card::Weapon.create(name: 'weapon 2', value: 8)
+  Card::Weapon.create(name: 'weapon 3', value: 10)
+  Card::Weapon.create(name: 'weapon 4', value: 18)
 
   Card::Armor.create(name: 'armor 1', value: 3)
   Card::Armor.create(name: 'armor 2', value: 6)

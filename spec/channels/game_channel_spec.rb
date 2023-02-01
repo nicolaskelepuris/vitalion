@@ -5,9 +5,9 @@ require 'rails_helper'
 RSpec.describe ::GameChannel, type: :channel do
   let!(:weapons) do
     [
-      Card::Weapon.create(name: 'weapon 1', value: 3, stackable: true),
-      Card::Weapon.create(name: 'weapon 2', value: 5, stackable: true),
-      Card::Weapon.create(name: 'weapon 3', value: 7, stackable: true),
+      Card::StackableWeapon.create(name: 'stackable weapon 1', value: 3),
+      Card::StackableWeapon.create(name: 'stackable weapon 2', value: 5),
+      Card::StackableWeapon.create(name: 'stackable weapon 3', value: 7),
       Card::Weapon.create(name: 'weapon 5', value: 9),
       Card::Weapon.create(name: 'weapon 6', value: 11)
     ]

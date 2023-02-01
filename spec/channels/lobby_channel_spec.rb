@@ -4,6 +4,8 @@ require 'rails_helper'
 
 RSpec.describe ::LobbyChannel, type: :channel do
   before do
+    Card::StackableWeapon.create(name: 'stackable weapon 1', value: 2)
+
     Card::Weapon.create(name: 'weapon 1', value: 2)
     Card::Weapon.create(name: 'weapon 2', value: 5)
     Card::Weapon.create(name: 'weapon 3', value: 15)
