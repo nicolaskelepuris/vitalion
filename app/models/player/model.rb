@@ -17,18 +17,18 @@ module Player
     end
 
     def prepare_attack(cards:)
-      @using_cards = get_valid_cards(cards)
+      @using_cards = get_valid_attack_cards(cards)
       @cards = remove_used_cards
 
       { skipped_attack: @using_cards.empty? }
     end
 
     def defend(attacker:, defense_cards:)
-      @using_cards = @cards.select { |card| defense_cards.include?(card.id) && card.defense.positive? }.uniq
+      @using_cards = @cards.select { |card| defense_cards.include?(card.id) && card.is_a?(::Card::Armor) }.uniq
       @cards = remove_used_cards
 
-      attack = attacker.using_cards.sum(&:attack)
-      defense = @using_cards.sum(&:defense)
+      attack = attacker.using_cards.sum(&:value)
+      defense = @using_cards.sum(&:value)
 
       receive_damage(attack - defense)
     end
@@ -52,13 +52,13 @@ module Player
 
     private
 
-    def get_valid_cards(cards)
-      valid_cards = @cards.select { |card| cards.include?(card.id) && card.attack.positive? }.uniq
+    def get_valid_attack_cards(cards)
+      valid_cards = @cards.select { |card| cards.include?(card.id) && card.is_a?(::Card::Weapon) }.uniq
       non_stackables = valid_cards.reject(&:stackable)
 
       return valid_cards unless non_stackables.length > 1
 
-      non_stackable = non_stackables.max_by(&:attack)
+      non_stackable = non_stackables.max_by(&:value)
       valid_cards.select(&:stackable) << non_stackable
     end
 
