@@ -91,7 +91,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
             player_1 = match_state[:player_1]
 
-            expect(::Card::Record.pluck(:id)).to include(*player_1[:cards].pluck(:id))
+            expect(::Card::Record.pluck(:id)).to include(*player_1[:cards].pluck('id'))
             expect(player_1[:cards].length).to eq(5)
 
             expect(player_1[:attack_turn]).to eq(false)
@@ -151,7 +151,7 @@ RSpec.describe ::LobbyChannel, type: :channel do
 
             player_2 = match_state[:player_2]
 
-            expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck(:id))
+            expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck('id'))
             expect(player_2[:cards].length).to eq(5)
 
             expect(player_2[:attack_turn]).to eq(false)
