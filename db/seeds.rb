@@ -16,7 +16,6 @@ if Card::Record.count.zero?
   Card::Armor.create(name: 'armor 4', value: 9)
   Card::Armor.create(name: 'armor 5', value: 12)
 
-  Card::HealthPotion.create(name: 'health potion 1', value: 5)
-  Card::HealthPotion.create(name: 'health potion 2', value: 10)
-  Card::HealthPotion.create(name: 'health potion 3', value: 15)
+  Card::HealthPotion.create(name: 'health potion 1', value: 2)
+  Card::HealthPotion.create(name: 'health potion 2', value: 4)
 end
