@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 if Card::Record.count.zero?
-  Card::StackableWeapon.create(name: 'stackable weapon 1', value: 2)
-  Card::StackableWeapon.create(name: 'stackable weapon 2', value: 3)
-  Card::StackableWeapon.create(name: 'stackable weapon 3', value: 4)
+  Card::StackableWeapon.create(name: 'stackable weapon 1', value: 1, url: 'https://d2quyk7cakk1i6.cloudfront.net/items/weapon-1.png')
+  Card::StackableWeapon.create(name: 'stackable weapon 2', value: 2)
+  Card::StackableWeapon.create(name: 'stackable weapon 3', value: 3)
+  Card::StackableWeapon.create(name: 'stackable weapon 4', value: 4)
   
   Card::Weapon.create(name: 'weapon 1', value: 5)
   Card::Weapon.create(name: 'weapon 2', value: 8)
