@@ -3,7 +3,7 @@ module Card
     extend self
 
     def call(card)
-      card.as_json(only: %i[id name value]).merge(type: format_type(card.type))
+      card.as_json(only: %i[id name value url]).merge(type: format_type(card.type))
     end
 
     private
