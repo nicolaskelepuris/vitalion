@@ -33,12 +33,8 @@ module Player
       @using_cards = get_valid_defense_cards(defense_cards)
       @cards = remove_used_cards
 
-      used_health_potion = @using_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
-
       attack = attacker.using_cards.sum(&:value)
-      defense = used_health_potion ? 0 : @using_cards.sum(&:value)
-
-      @health += @using_cards.sum(&:value) if used_health_potion
+      defense = @using_cards.sum(&:value)
 
       receive_damage(attack - defense)
     end
@@ -80,15 +76,11 @@ module Player
     end
 
     def get_valid_defense_cards(cards)
-      valid_cards = @cards.select { |card| cards.include?(card.id) && valid_defense_cards_types.has_key?(card.type) }.uniq
-
-      return [get_max_health_potion(valid_cards)] if valid_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
-
-      valid_cards
+      @cards.select { |card| cards.include?(card.id) && valid_defense_cards_types.has_key?(card.type) }.uniq
     end
 
     def valid_defense_cards_types
-      [::Card::Armor, ::Card::HealthPotion].to_h { |type| [type.to_s, true] }
+      [::Card::Armor].to_h { |type| [type.to_s, true] }
     end
 
     def get_max_health_potion(cards)
@@ -109,7 +101,7 @@ module Player
       return if damage.nil?
       return unless damage.positive?
 
-      @health = [[health - damage, 0].max, 25].min
+      @health = [health - damage, 0].max
     end
   end
 end
