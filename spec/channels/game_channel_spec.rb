@@ -320,105 +320,103 @@ RSpec.describe ::GameChannel, type: :channel do
     end
   end
 
-  # describe 'restart_match' do
-  #   let(:password) { 'any password' }
-  #   let(:current_user) { ::ApplicationCable::User.new }
-  #   let(:current_user_nickname) { 'a good player 1 nickname' }
-  #   let(:second_player) { ::ApplicationCable::User.new }
-  #   let(:second_player_nickname) { 'player 2 nickname here' }
-  #   let(:player_performing_action) { [current_user, second_player].sample }
+  describe 'restart_match' do
+    let(:password) { 'any password' }
+    let(:current_user) { ::ApplicationCable::User.new }
+    let(:current_user_nickname) { 'a good player 1 nickname' }
+    let(:second_player) { ::ApplicationCable::User.new }
+    let(:second_player_nickname) { 'player 2 nickname here' }
+    let(:player_performing_action) { [current_user, second_player].sample }
 
-  #   before do
-  #     Matches[password] =
-  #       ::Match::Model.new(player_1_id: current_user.id, player_1_nickname: current_user_nickname,
-  #                          observers: [::GameChannel])
-  #     Matches[password].join(player_id: second_player.id, player_nickname: second_player_nickname)
-  #     Matches[password].start(current_user.id)
+    before do
+      Matches[password] =
+        ::Match::Model.new(player_1_id: current_user.id, player_1_nickname: current_user_nickname,
+                           observers: [::GameChannel])
+      Matches[password].join(player_id: second_player.id, player_nickname: second_player_nickname)
+      Matches[password].start(current_user.id)
 
-  #     stub_connection(current_user: player_performing_action)
-  #     subscribe password:
-  #   end
+      stub_connection(current_user: player_performing_action)
+      subscribe password:
+    end
 
-  #   subject(:restart_match) { perform :restart_match, password: }
+    subject(:restart_match) { perform :restart_match, password: }
 
-  #   describe 'success' do
-  #     context 'when match is finished' do        
-  #       before { Matches[password].instance_variable_get(:@state_machine).finish }
+    describe 'success' do
+      context 'when match is finished' do        
+        before { Matches[password].instance_variable_get(:@state_machine).finish }
 
-  #       it 'notifies both players to start a new round' do
-  #         expect { restart_match }
-  #           .to have_broadcasted_to("notifications_#{current_user.id}")
-  #           .with(
-  #             lambda do |payload|
-  #               expect(payload[:method]).to eq('start_round')
-  #               expect(payload[:data])
-  #                 .to include(
-  #                   player_1: include(
-  #                     defense_turn: false,
-  #                     health: 25,
-  #                     nickname: current_user_nickname,
-  #                     id: current_user.id
-  #                   ),
-  #                   player_2: include(
-  #                     defense_turn: false,
-  #                     health: 25,
-  #                     nickname: second_player_nickname,
-  #                     id: second_player.id
-  #                   )
-  #                 )
+        it 'notifies both players to start a new round' do
+          expect { restart_match }
+            .to have_broadcasted_to("notifications_#{current_user.id}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('start_round')
 
-  #               player_1 = payload[:data][:player_1]
-  #               player_2 = payload[:data][:player_2]
-  #               player_cards = player_1[:cards]
+                player_1 = payload[:data][:player_1]
 
-  #               expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-  #               expect(player_cards.length).to eq(5)
-  #               expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
-  #             end
-  #           )
-  #           .and have_broadcasted_to("notifications_#{second_player.id}")
-  #           .with(
-  #             lambda do |payload|
-  #               expect(payload[:method]).to eq('start_round')
-  #               expect(payload[:data])
-  #                 .to include(
-  #                   player_1: include(
-  #                     defense_turn: false,
-  #                     health: 25,
-  #                     nickname: current_user_nickname,
-  #                     id: current_user.id
-  #                   ),
-  #                   player_2: include(
-  #                     defense_turn: false,
-  #                     health: 25,
-  #                     nickname: second_player_nickname,
-  #                     id: second_player.id
-  #                   )
-  #                 )
+                expect(::Card::Record.pluck(:id)).to include(*player_1[:cards].pluck(:id))
+                expect(player_1[:cards].length).to eq(5)
 
-  #               player_1 = payload[:data][:player_1]
-  #               player_2 = payload[:data][:player_2]
-  #               player_cards = player_2[:cards]
+                expect(player_1[:defense_turn]).to eq(false)
+                expect(player_1[:health]).to eq(25)
+                expect(player_1[:id]).to eq(current_user.id)
+                expect(player_1[:nickname]).to eq(current_user_nickname)
+                expect(player_1[:using_cards]).to eq([])
 
-  #               expect(::Card::Record.pluck(:id)).to include(*player_cards.pluck(:id))
-  #               expect(player_cards.length).to eq(5)
-  #               expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
-  #             end
-  #           )
-  #       end
-  #     end
-  #   end
+                player_2 = payload[:data][:player_2]
 
-  #   describe 'failures' do
-  #     context 'when match is not finished' do
-  #       it 'notifies both players to start a new round' do
-  #         expect { restart_match }
-  #           .to have_broadcasted_to("notifications_#{player_performing_action.id}")
-  #           .with(method: "start_round", error: "Can't restart the match")
-  #       end
-  #     end
-  #   end
-  # end
+                expect(player_2[:cards]).to eq(nil)
+                expect(player_2[:defense_turn]).to eq(false)
+                expect(player_2[:health]).to eq(25)
+                expect(player_2[:id]).to eq(second_player.id)
+                expect(player_2[:nickname]).to eq(second_player_nickname)
+                expect(player_2[:using_cards]).to eq([])
+
+                expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
+              end
+            )
+            .and have_broadcasted_to("notifications_#{second_player.id}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('start_round')
+
+                player_1 = payload[:data][:player_1]
+
+                expect(player_1[:cards]).to eq(nil)
+                expect(player_1[:defense_turn]).to eq(false)
+                expect(player_1[:health]).to eq(25)
+                expect(player_1[:id]).to eq(current_user.id)
+                expect(player_1[:nickname]).to eq(current_user_nickname)
+                expect(player_1[:using_cards]).to eq([])
+
+                player_2 = payload[:data][:player_2]
+
+                expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck(:id))
+                expect(player_2[:cards].length).to eq(5)
+
+                expect(player_2[:defense_turn]).to eq(false)
+                expect(player_2[:health]).to eq(25)
+                expect(player_2[:id]).to eq(second_player.id)
+                expect(player_2[:nickname]).to eq(second_player_nickname)
+                expect(player_2[:using_cards]).to eq([])
+                
+                expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
+              end
+            )
+        end
+      end
+    end
+
+    describe 'failures' do
+      context 'when match is not finished' do
+        it 'notifies both players to start a new round' do
+          expect { restart_match }
+            .to have_broadcasted_to("notifications_#{player_performing_action.id}")
+            .with(method: "start_round", error: "Can't restart the match")
+        end
+      end
+    end
+  end
 
   # describe 'attack' do
   #   describe 'success' do
