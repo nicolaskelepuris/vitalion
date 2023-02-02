@@ -39,7 +39,7 @@ RSpec.describe ::GameChannel, type: :channel do
     before do
       Matches[password] = ::Match::Model.new(player_1_id: current_user.id, observers: [::GameChannel])
       Matches[password].join(player_id: player_2.id)
-      Matches[password].start(current_user.id)
+      Matches[password].start
     end
 
     describe 'success' do
@@ -108,7 +108,7 @@ RSpec.describe ::GameChannel, type: :channel do
 
       before do
         match.join(player_id: second_player.id, player_nickname: second_player_nickname)
-        match.start(current_user.id)
+        match.start
       end
 
       subject(:start_round) { perform :start_round, password: }
@@ -333,7 +333,7 @@ RSpec.describe ::GameChannel, type: :channel do
         ::Match::Model.new(player_1_id: current_user.id, player_1_nickname: current_user_nickname,
                            observers: [::GameChannel])
       Matches[password].join(player_id: second_player.id, player_nickname: second_player_nickname)
-      Matches[password].start(current_user.id)
+      Matches[password].start
 
       stub_connection(current_user: player_performing_action)
       subscribe password:
@@ -433,7 +433,7 @@ RSpec.describe ::GameChannel, type: :channel do
         )
 
         Matches[password].join(player_id: second_player.id, player_nickname: second_player_nickname)
-        Matches[password].start(current_user.id)
+        Matches[password].start
         
         Matches[password]
       end
@@ -763,7 +763,7 @@ RSpec.describe ::GameChannel, type: :channel do
         )
 
         Matches[password].join(player_id: second_player.id, player_nickname: second_player_nickname)
-        Matches[password].start(current_user.id)
+        Matches[password].start
         
         Matches[password]
       end

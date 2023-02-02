@@ -20,8 +20,8 @@ module Match
       @state_machine.second_player_join
     end
 
-    def start(id)
-      raise StandardError, "Can't start the match" unless @state_machine.may_start_match? && id == @player_1.id
+    def start
+      raise StandardError, "Can't start the match" unless @state_machine.may_start_match?
 
       @state_machine.start_match
     end

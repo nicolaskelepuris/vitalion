@@ -144,7 +144,6 @@ RSpec.describe ::LobbyChannel, type: :channel do
             player_1 = match_state[:player_1]
 
             expect(player_1[:cards]).to eq(nil)
-            expect(player_1[:attack_turn]).to eq(false)
             expect(player_1[:defense_turn]).to eq(false)
             expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
             expect(player_1[:id]).to eq(first_player.id)
@@ -156,22 +155,22 @@ RSpec.describe ::LobbyChannel, type: :channel do
             expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck('id'))
             expect(player_2[:cards].length).to eq(5)
 
-            expect(player_2[:attack_turn]).to eq(false)
             expect(player_2[:defense_turn]).to eq(false)
             expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
             expect(player_2[:id]).to eq(current_user.id)
             expect(player_2[:nickname]).to eq(nickname)
             expect(player_2[:using_cards]).to eq([])
+
+            expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
           end
 
           it 'sends current user id to second player' do
             expect { join_lobby }
-              .to have_broadcasted_to("notifications_#{current_user.id}")
-              .with(method: 'joined_lobby', data: { current_user_id: current_user.id, share_url: "https://localhost/lobby?password=any%20password" })
-              .and have_broadcasted_to("notifications_#{first_player.id}")
+              .to have_broadcasted_to("notifications_#{first_player.id}")
               .with(
-                method: 'waiting_to_start_match',
+                method: 'match_started',
                 data: {
+                  current_user_id: first_player.id,
                   is_player_1: true,
                   enemy_nickname: nickname,
                   enemy_id: current_user.id
@@ -179,8 +178,9 @@ RSpec.describe ::LobbyChannel, type: :channel do
               )
               .and have_broadcasted_to("notifications_#{current_user.id}")
               .with(
-                method: 'waiting_to_start_match',
+                method: 'match_started',
                 data: {
+                  current_user_id: current_user.id,
                   is_player_1: false,
                   enemy_nickname: first_player_nickname,
                   enemy_id: first_player.id
@@ -188,52 +188,6 @@ RSpec.describe ::LobbyChannel, type: :channel do
               )
           end
         end
-      end
-    end
-  end
-
-  describe 'start_match' do
-    describe 'success' do
-      let(:password) { 'any password' }
-      let(:current_user) { ::ApplicationCable::User.new }
-      let(:second_player) { ::ApplicationCable::User.new }
-
-      before do
-        stub_connection(current_user:)
-        subscribe(password:)
-        perform(:join_lobby, password:)
-
-        stub_connection current_user: second_player
-        subscribe(password:)
-        perform(:join_lobby, password:)
-
-        stub_connection(current_user:)
-        subscribe password:
-      end
-
-      subject(:start_match) { perform :start_match, password: }
-
-      it 'starts the match with random player attack turn set to true' do
-        # When
-        start_match
-
-        # Then
-        match_state = Matches[password].state(current_user.id)
-        player_1 = match_state[:player_1]
-        player_2 = match_state[:player_2]
-
-        expect(player_1[:defense_turn]).to eq(false)
-        expect(player_2[:defense_turn]).to eq(false)
-
-        expect(player_1[:attack_turn] ^ player_2[:attack_turn]).to eq(true)
-      end
-
-      it 'broadcasts to players that match started' do
-        expect { start_match }
-          .to have_broadcasted_to("notifications_#{current_user.id}")
-          .with(method: 'match_started')
-          .and have_broadcasted_to("notifications_#{second_player.id}")
-          .with(method: 'match_started')
       end
     end
   end

@@ -25,24 +25,9 @@ class LobbyChannel < ApplicationCable::Channel
     if Matches.key? params[:password]
       match.join(player_id: current_user.id, player_nickname: data['nickname'])
 
-      match_state = match.state(current_user.id)
-      player_1_id = match_state[:player_1][:id]
-      player_2_id = match_state[:player_2][:id]
-      match.players_ids.each do |id|
-        is_player_1 = id == player_1_id
+      current_user.match = match
 
-        Broadcasting.private_broadcast_to(
-          id,
-          {
-            method: 'waiting_to_start_match',
-            data: {
-              is_player_1:,
-              enemy_nickname: match.enemy_nickname(id),
-              enemy_id: is_player_1 ? player_2_id : player_1_id
-            }
-          }
-        )
-      end
+      start_match
     else
       create_match(
         params[:password],
@@ -53,28 +38,53 @@ class LobbyChannel < ApplicationCable::Channel
           password: params[:password]
         )
       )
+
+      current_user.match = match
+
+      Broadcasting.private_broadcast_to(current_user.id, { method: 'joined_lobby', data: { current_user_id: current_user.id, share_url: share_url } })
     end
-
-    current_user.match = match
-
-    share_url = URI::HTTPS.build(host: ENV.fetch('FRONTEND_HOST'), path: ENV.fetch('FRONTEND_PATH'), query: "password=#{params[:password]}")
-    Broadcasting.private_broadcast_to(current_user.id, { method: 'joined_lobby', data: { current_user_id: current_user.id, share_url: share_url } })
   rescue StandardError => e
     Broadcasting.private_broadcast_to(current_user.id, { method: 'joined_lobby', error: e.message })
   end
 
+  private
+
   def start_match
-    match.start(current_user.id)
+    match.start
+
+    match_state = match.state(current_user.id)
+    player_1_id = match_state[:player_1][:id]
+    player_2_id = match_state[:player_2][:id]
+
     match.players_ids.each do |id|
-      Broadcasting.private_broadcast_to(id, { method: 'match_started' })
+      is_player_1 = id == player_1_id
+
+      Broadcasting.private_broadcast_to(
+        id, 
+        {
+          method: 'match_started',
+          data: {
+            current_user_id: id,
+            is_player_1:,
+            enemy_nickname: match.enemy_nickname(id),
+            enemy_id: is_player_1 ? player_2_id : player_1_id
+          }
+        }
+      )
     end
   rescue StandardError => e
     Broadcasting.private_broadcast_to(current_user.id, { method: 'match_started', error: e.message })
   end
 
-  private
-
   def match
     find_match(params[:password])
+  end
+
+  def share_url
+    host = ENV.fetch('FRONTEND_HOST')
+    path = ENV.fetch('FRONTEND_PATH')
+    query = "password=#{params[:password]}"
+
+    URI::HTTPS.build(host:, path:, query:)
   end
 end
