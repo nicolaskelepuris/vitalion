@@ -575,7 +575,6 @@ RSpec.describe ::GameChannel, type: :channel do
                   player_1 = payload[:data][:player_1]
   
                   expect(::Card::Record.pluck(:id)).to include(*player_1[:cards].pluck(:id))
-                  expect(player_1[:cards].length).to eq(5)
   
                   expect(player_1[:id]).to eq(current_user.id)
                   expect(player_1[:nickname]).to eq(current_user_nickname)
@@ -585,9 +584,11 @@ RSpec.describe ::GameChannel, type: :channel do
                   if attacking_player_id == current_user.id
                     expect(player_1[:health]).to eq(13)
                     expect(player_1[:attack_turn]).to eq(false)
+                    expect(player_1[:cards].length).to eq(4)
                   else
                     expect(player_1[:health]).to eq(3)
                     expect(player_1[:attack_turn]).to eq(true)
+                    expect(player_1[:cards].length).to eq(5)
                   end
   
                   player_2 = payload[:data][:player_2]
@@ -635,7 +636,6 @@ RSpec.describe ::GameChannel, type: :channel do
                   player_2 = payload[:data][:player_2]
   
                   expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck(:id))
-                  expect(player_2[:cards].length).to eq(5)
 
                   expect(player_2[:id]).to eq(second_player.id)
                   expect(player_2[:nickname]).to eq(second_player_nickname)
@@ -645,9 +645,11 @@ RSpec.describe ::GameChannel, type: :channel do
                   if attacking_player_id == second_player.id
                     expect(player_2[:health]).to eq(15)
                     expect(player_2[:attack_turn]).to eq(false)
+                    expect(player_2[:cards].length).to eq(4)
                   else
                     expect(player_2[:health]).to eq(5)
                     expect(player_2[:attack_turn]).to eq(true)
+                    expect(player_2[:cards].length).to eq(5)
                   end
                 end
               )
@@ -678,6 +680,10 @@ RSpec.describe ::GameChannel, type: :channel do
                 if attacking_player_id == current_user.id
                   expect(player_1[:cards].length).to eq(6)
                   expect(player_1[:attack_turn]).to eq(false)
+
+                  remaining_skips_with_attack_cards = match.instance_variable_get(:@player_1)
+                                                           .instance_variable_get(:@remaining_skips_with_attack_cards)
+                  expect(remaining_skips_with_attack_cards).to eq(1)
                 else
                   expect(player_1[:cards].length).to eq(5)
                   expect(player_1[:attack_turn]).to eq(true)
@@ -736,12 +742,108 @@ RSpec.describe ::GameChannel, type: :channel do
                 if attacking_player_id == second_player.id
                   expect(player_2[:cards].length).to eq(6)
                   expect(player_2[:attack_turn]).to eq(false)
+                  
+                  remaining_skips_with_attack_cards = match.instance_variable_get(:@player_2)
+                                                           .instance_variable_get(:@remaining_skips_with_attack_cards)
+                  expect(remaining_skips_with_attack_cards).to eq(1)
                 else
                   expect(player_2[:cards].length).to eq(5)
                   expect(player_2[:attack_turn]).to eq(true)
                 end
               end
             )
+        end
+
+        context 'and player can not skip having attack cards' do
+          before do
+            match
+              .instance_variable_get(is_player_1_attack_turn ? :@player_1 : :@player_2)
+              .instance_variable_set(:@remaining_skips_with_attack_cards, 0)
+          end
+
+          it 'returns match state to player one' do
+            expect { attack }
+              .to have_broadcasted_to("notifications_#{current_user.id}")
+              .with(
+                lambda do |payload|
+                  expect(payload[:method]).to eq('start_round')
+  
+                  player_1 = payload[:data][:player_1]
+  
+                  expect(::Card::Record.pluck(:id)).to include(*player_1[:cards].pluck(:id))
+                  expect(player_1[:cards].length).to eq(5)
+  
+                  expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
+                  expect(player_1[:id]).to eq(current_user.id)
+                  expect(player_1[:nickname]).to eq(current_user_nickname)
+                  expect(player_1[:defense_turn]).to eq(false)
+                  expect(player_1[:using_cards]).to eq([])
+  
+                  if attacking_player_id == current_user.id
+                    expect(player_1[:attack_turn]).to eq(false)
+                  else
+                    expect(player_1[:attack_turn]).to eq(true)
+                  end
+  
+                  player_2 = payload[:data][:player_2]
+  
+                  expect(player_2[:cards]).to eq(nil)
+                  expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
+                  expect(player_2[:id]).to eq(second_player.id)
+                  expect(player_2[:nickname]).to eq(second_player_nickname)
+                  expect(player_2[:defense_turn]).to eq(false)
+                  expect(player_2[:using_cards]).to eq([])
+  
+                  if attacking_player_id == second_player.id
+                    expect(player_2[:attack_turn]).to eq(false)
+                  else
+                    expect(player_2[:attack_turn]).to eq(true)
+                  end
+                end
+              )
+          end
+    
+          it 'returns match state to player two' do
+            expect { attack }
+              .to have_broadcasted_to("notifications_#{second_player.id}")
+              .with(
+                lambda do |payload|
+                  expect(payload[:method]).to eq('start_round')
+  
+                  player_1 = payload[:data][:player_1]
+  
+                  expect(player_1[:cards]).to eq(nil)
+                  expect(player_1[:health]).to eq(::Player::INITIAL_HEALTH)
+                  expect(player_1[:id]).to eq(current_user.id)
+                  expect(player_1[:nickname]).to eq(current_user_nickname)
+                  expect(player_1[:defense_turn]).to eq(false)
+                  expect(player_1[:using_cards]).to eq([])
+  
+                  if attacking_player_id == current_user.id
+                    expect(player_1[:attack_turn]).to eq(false)
+                  else
+                    expect(player_1[:attack_turn]).to eq(true)
+                  end
+  
+                  player_2 = payload[:data][:player_2]
+  
+                  expect(::Card::Record.pluck(:id)).to include(*player_2[:cards].pluck(:id))
+                  expect(player_2[:cards].length).to eq(5)
+                  
+                  expect(player_2[:health]).to eq(::Player::INITIAL_HEALTH)
+                  expect(player_2[:id]).to eq(second_player.id)
+                  expect(player_2[:nickname]).to eq(second_player_nickname)
+                  expect(player_2[:defense_turn]).to eq(false)
+                  expect(player_2[:using_cards]).to eq([])
+  
+                  if attacking_player_id == second_player.id
+                    expect(player_2[:attack_turn]).to eq(false)
+                  else
+                    expect(player_2[:attack_turn]).to eq(true)
+                  end
+                end
+              )
+          end
         end
       end
     end

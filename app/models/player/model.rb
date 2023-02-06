@@ -12,20 +12,33 @@ module Player
       @cards = cards
       @health = INITIAL_HEALTH
       @using_cards = []
+      @remaining_skips_with_attack_cards = 2
     end
 
     def dead?
       @health.zero?
     end
 
-    def prepare_attack(cards:)
+    def prepare_attack(cards:, all_cards:)
       @using_cards = get_valid_attack_cards(cards)
-      @cards = remove_used_cards
+      @cards = remove_used_cards     
+
+      has_attack_cards = @cards.any? { |c| attack_cards_types.has_key?(c.type) }
+
+      if @using_cards.empty?      
+        @cards.push(all_cards.sample) if !has_attack_cards
+
+        if has_attack_cards && @remaining_skips_with_attack_cards.positive?
+          @remaining_skips_with_attack_cards -= 1
+          @cards.push(all_cards.sample)
+        end
+      end
 
       used_health_potion = @using_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
 
       if used_health_potion
         @health += @using_cards.sum(&:value)
+        @using_cards = []
       end
 
       { skipped_attack: @using_cards.empty? || used_health_potion }
@@ -60,8 +73,12 @@ module Player
 
     private
 
+    def attack_cards_types
+      [::Card::Weapon, ::Card::StackableWeapon].to_h { |type| [type.to_s, true] }
+    end
+
     def get_valid_attack_cards(cards)
-      valid_cards = @cards.select { |card| cards.include?(card.id) && valid_attack_cards_types.has_key?(card.type) }.uniq
+      valid_cards = @cards.select { |card| cards.include?(card.id) && valid_attack_turn_cards_types.has_key?(card.type) }.uniq
 
       return [get_max_health_potion(valid_cards)] if valid_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
 
@@ -73,7 +90,7 @@ module Player
       valid_cards.select { |c| c.is_a?(::Card::StackableWeapon) } << non_stackable
     end
 
-    def valid_attack_cards_types
+    def valid_attack_turn_cards_types
       [::Card::Weapon, ::Card::StackableWeapon, ::Card::HealthPotion].to_h { |type| [type.to_s, true] }
     end
 

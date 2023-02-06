@@ -121,12 +121,11 @@ module Match
     def player_attack(player:, cards:, can_attack:, state_machine_skip_attack:, state_machine_attack:)
       raise StandardError, "Can't attack now" unless can_attack
 
-      prepare_attack_result = player.prepare_attack(cards:)
+      prepare_attack_result = player.prepare_attack(cards:, all_cards: @cards)
 
       if prepare_attack_result[:skipped_attack]
         state_machine_skip_attack.call
 
-        player.refill_cards(all_cards: @cards)
         skip_turn
         return
       end
