@@ -4,7 +4,7 @@ module Player
   INITIAL_HEALTH = 25
 
   class Model
-    attr_reader :id, :health, :nickname
+    attr_reader :id, :health, :nickname, :remaining_skips_with_attack_cards
 
     def initialize(cards:, id: nil, nickname: nil)
       @id = id

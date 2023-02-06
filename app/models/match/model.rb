@@ -68,6 +68,10 @@ module Match
 
       player_2_cards = id == @player_2&.id ? @player_2.cards.map { |c| ::Card::Serializer.call(c) } : nil
 
+      player_1_skip_count = id == @player_1.id ? @player_1.remaining_skips_with_attack_cards : nil
+
+      player_2_skip_count = id == @player_2&.id ? @player_2.remaining_skips_with_attack_cards : nil
+
       {
         player_1: {
           id: @player_1.id,
@@ -76,7 +80,8 @@ module Match
           attack_turn: @state_machine.player_1_attack_turn?,
           defense_turn: @state_machine.player_1_defense_turn?,
           cards: player_1_cards,
-          using_cards: @player_1.using_cards.map { |c| ::Card::Serializer.call(c) }
+          using_cards: @player_1.using_cards.map { |c| ::Card::Serializer.call(c) },
+          remaining_skips_with_attack_cards: player_1_skip_count
         },
         player_2: {
           id: @player_2&.id,
@@ -85,7 +90,8 @@ module Match
           attack_turn: @state_machine.player_2_attack_turn?,
           defense_turn: @state_machine.player_2_defense_turn?,
           cards: player_2_cards,
-          using_cards: @player_2&.using_cards&.map { |c| ::Card::Serializer.call(c) } || []
+          using_cards: @player_2&.using_cards&.map { |c| ::Card::Serializer.call(c) } || [],
+          remaining_skips_with_attack_cards: player_2_skip_count
         }
       }
     end

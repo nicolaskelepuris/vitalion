@@ -781,8 +781,10 @@ RSpec.describe ::GameChannel, type: :channel do
   
                   if attacking_player_id == current_user.id
                     expect(player_1[:attack_turn]).to eq(false)
+                    expect(player_1[:remaining_skips_with_attack_cards]).to eq(0)
                   else
                     expect(player_1[:attack_turn]).to eq(true)
+                    expect(player_1[:remaining_skips_with_attack_cards]).to eq(2)
                   end
   
                   player_2 = payload[:data][:player_2]
@@ -793,6 +795,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   expect(player_2[:nickname]).to eq(second_player_nickname)
                   expect(player_2[:defense_turn]).to eq(false)
                   expect(player_2[:using_cards]).to eq([])
+                  expect(player_2[:remaining_skips_with_attack_cards]).to eq(nil)
   
                   if attacking_player_id == second_player.id
                     expect(player_2[:attack_turn]).to eq(false)
@@ -818,6 +821,7 @@ RSpec.describe ::GameChannel, type: :channel do
                   expect(player_1[:nickname]).to eq(current_user_nickname)
                   expect(player_1[:defense_turn]).to eq(false)
                   expect(player_1[:using_cards]).to eq([])
+                  expect(player_1[:remaining_skips_with_attack_cards]).to eq(nil)
   
                   if attacking_player_id == current_user.id
                     expect(player_1[:attack_turn]).to eq(false)
@@ -838,8 +842,10 @@ RSpec.describe ::GameChannel, type: :channel do
   
                   if attacking_player_id == second_player.id
                     expect(player_2[:attack_turn]).to eq(false)
+                    expect(player_2[:remaining_skips_with_attack_cards]).to eq(0)
                   else
                     expect(player_2[:attack_turn]).to eq(true)
+                    expect(player_2[:remaining_skips_with_attack_cards]).to eq(2)
                   end
                 end
               )
