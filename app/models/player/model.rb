@@ -39,6 +39,7 @@ module Player
       if used_health_potion
         @health += @using_cards.sum(&:value)
         @using_cards = []
+        @cards.push(all_cards.sample)
       end
 
       { skipped_attack: @using_cards.empty? || used_health_potion }
