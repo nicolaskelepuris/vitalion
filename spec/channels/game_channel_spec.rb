@@ -571,7 +571,7 @@ RSpec.describe ::GameChannel, type: :channel do
               .with(
                 lambda do |payload|
                   expect(payload[:method]).to eq('start_round')
-                  expect(payload[:effect]).to eq('used_health_potion')
+                  expect(payload[:data][:effect]).to eq('used_health_potion')
   
                   player_1 = payload[:data][:player_1]
   
@@ -616,7 +616,7 @@ RSpec.describe ::GameChannel, type: :channel do
               .with(
                 lambda do |payload|
                   expect(payload[:method]).to eq('start_round')
-                  expect(payload[:effect]).to eq('used_health_potion')
+                  expect(payload[:data][:effect]).to eq('used_health_potion')
   
                   player_1 = payload[:data][:player_1]  
                   
@@ -666,7 +666,7 @@ RSpec.describe ::GameChannel, type: :channel do
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
-                expect(payload[:effect]).to eq('skipped_attack')
+                expect(payload[:data][:effect]).to eq('skipped_attack')
 
                 player_1 = payload[:data][:player_1]
 
@@ -714,7 +714,7 @@ RSpec.describe ::GameChannel, type: :channel do
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
-                expect(payload[:effect]).to eq('skipped_attack')
+                expect(payload[:data][:effect]).to eq('skipped_attack')
 
                 player_1 = payload[:data][:player_1]
 
@@ -925,9 +925,9 @@ RSpec.describe ::GameChannel, type: :channel do
 
           expect { defend }
             .to have_broadcasted_to("notifications_#{current_user.id}")
-            .with(method: 'match_finished', effect: winner == current_user ? 'won' : 'loose', data: { winner: winner_nickname })
+            .with(method: 'match_finished', data: { winner: winner_nickname, effect: winner == current_user ? 'won' : 'loose' })
             .and have_broadcasted_to("notifications_#{second_player.id}")
-            .with(method: 'match_finished', effect: winner == second_player ? 'won' : 'loose', data: { winner: winner_nickname })
+            .with(method: 'match_finished', data: { winner: winner_nickname, effect: winner == second_player ? 'won' : 'loose' })
         end
       end
 
@@ -953,7 +953,7 @@ RSpec.describe ::GameChannel, type: :channel do
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('end_defense_turn')
-                expect(payload[:effect]).to eq('defended')
+                expect(payload[:data][:effect]).to eq('defended')
   
                 expect(payload[:data][:player_1][:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(payload[:data][:player_2][:health]).to eq(::Player::INITIAL_HEALTH)
@@ -963,7 +963,7 @@ RSpec.describe ::GameChannel, type: :channel do
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('end_defense_turn')
-                expect(payload[:effect]).to eq('defended')
+                expect(payload[:data][:effect]).to eq('defended')
   
                 expect(payload[:data][:player_1][:health]).to eq(::Player::INITIAL_HEALTH)
                 expect(payload[:data][:player_2][:health]).to eq(::Player::INITIAL_HEALTH)
@@ -978,7 +978,7 @@ RSpec.describe ::GameChannel, type: :channel do
           .with(
             lambda do |payload|
               expect(payload[:method]).to eq('end_defense_turn')
-              expect(payload[:effect]).to eq('attacked')
+              expect(payload[:data][:effect]).to eq('attacked')
 
               player_1 = payload[:data][:player_1]
 
@@ -1030,7 +1030,7 @@ RSpec.describe ::GameChannel, type: :channel do
           .with(
             lambda do |payload|
               expect(payload[:method]).to eq('end_defense_turn')
-              expect(payload[:effect]).to eq('attacked')
+              expect(payload[:data][:effect]).to eq('attacked')
 
               player_1 = payload[:data][:player_1]
 

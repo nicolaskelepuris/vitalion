@@ -53,8 +53,7 @@ class GameChannel < ApplicationCable::Channel
         id,
         {
           method: 'match_finished',
-          effect: is_winner ? 'won' : 'loose',
-          data: { winner: winner.nickname }
+          data: { winner: winner.nickname, effect: is_winner ? 'won' : 'loose' }
         }
       )
     end
@@ -66,7 +65,7 @@ class GameChannel < ApplicationCable::Channel
 
   def self.send_match_state(match, method, effect = nil)
     match.players_ids.each do |id|
-      Broadcasting.private_broadcast_to(id, { method:, data: match.state(id), effect: effect })
+      Broadcasting.private_broadcast_to(id, { method:, data: match.state(id).merge(effect: effect) })
     end
   end
 
