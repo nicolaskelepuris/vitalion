@@ -42,21 +42,31 @@ class GameChannel < ApplicationCable::Channel
     self.send_match_state(match, 'end_attack_turn')
   end
 
-  def self.end_defense_turn(match)
-    return self.send_match_state(match, 'end_defense_turn') unless match.finished?
+  def self.end_defense_turn(match, was_attack_successful)
+    return self.send_match_state(match, 'end_defense_turn', was_attack_successful ? 'attacked' : 'defended') unless match.finished?
 
     match.players_ids.each do |id|
-      Broadcasting.private_broadcast_to(id, { method: 'match_finished', data: { winner: match.winner } })
+      winner = match.winner
+      is_winner = winner.id == id
+
+      Broadcasting.private_broadcast_to(
+        id,
+        {
+          method: 'match_finished',
+          effect: is_winner ? 'won' : 'loose',
+          data: { winner: winner.nickname }
+        }
+      )
     end
   end
 
-  def self.end_round(match)
-    self.send_match_state(match, 'start_round')
+  def self.end_round(match, reason)
+    self.send_match_state(match, 'start_round', reason)
   end
 
-  def self.send_match_state(match, method)
+  def self.send_match_state(match, method, effect = nil)
     match.players_ids.each do |id|
-      Broadcasting.private_broadcast_to(id, { method:, data: match.state(id) })
+      Broadcasting.private_broadcast_to(id, { method:, data: match.state(id), effect: effect })
     end
   end
 

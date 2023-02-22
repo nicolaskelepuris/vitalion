@@ -107,9 +107,9 @@ module Match
     def winner
       return unless @state_machine.finished?
 
-      return @player_1.nickname if @player_2.dead?
+      return @player_1 if @player_2.dead?
 
-      @player_2.nickname
+      @player_2
     end
 
     def restart
@@ -129,10 +129,10 @@ module Match
 
       prepare_attack_result = player.prepare_attack(cards:, all_cards: @cards)
 
-      if prepare_attack_result[:skipped_attack]
+      if prepare_attack_result[:skipped_attack].present?
         state_machine_skip_attack.call
 
-        skip_turn
+        skip_turn(prepare_attack_result[:skipped_attack])
         return
       end
 
@@ -164,25 +164,26 @@ module Match
       @observers.each { |o| o.end_attack_turn(self) }
     end
 
-    def end_defense_turn
-      @observers.each { |o| o.end_defense_turn(self) }
+    def end_defense_turn(was_attack_successful:)
+      @observers.each { |o| o.end_defense_turn(self, was_attack_successful) }
     end
 
-    def skip_turn
-      @observers.each { |o| o.end_round(self) }
+    def skip_turn(reason)
+      @observers.each { |o| o.end_round(self, reason) }
     end
 
     def player_defend(defender:, defender_cards:, attacker:, can_defend:, state_machine_defend:)
       raise StandardError, "Can't defend now" unless can_defend
 
+      defender_health_before_attack = defender.health
       defender.defend(attacker: attacker, defense_cards: defender_cards)
 
       if defender.dead?
         @state_machine.finish
 
-        end_defense_turn
+        end_defense_turn(was_attack_successful: true)
       else
-        end_defense_turn
+        end_defense_turn(was_attack_successful: defender_health_before_attack > defender.health)
 
         state_machine_defend.call
 

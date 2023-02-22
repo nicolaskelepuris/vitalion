@@ -32,6 +32,8 @@ module Player
           @remaining_skips_with_attack_cards -= 1
           @cards.push(all_cards.sample)
         end
+
+        return { skipped_attack: 'skipped_attack' }
       end
 
       used_health_potion = @using_cards.any? { |c| c.is_a?(::Card::HealthPotion) }
@@ -40,9 +42,11 @@ module Player
         @health += @using_cards.sum(&:value)
         @using_cards = []
         @cards.push(all_cards.sample)
+
+        return { skipped_attack: 'used_health_potion' }
       end
 
-      { skipped_attack: @using_cards.empty? || used_health_potion }
+      {}
     end
 
     def defend(attacker:, defense_cards:)

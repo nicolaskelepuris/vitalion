@@ -571,6 +571,7 @@ RSpec.describe ::GameChannel, type: :channel do
               .with(
                 lambda do |payload|
                   expect(payload[:method]).to eq('start_round')
+                  expect(payload[:effect]).to eq('used_health_potion')
   
                   player_1 = payload[:data][:player_1]
   
@@ -615,6 +616,7 @@ RSpec.describe ::GameChannel, type: :channel do
               .with(
                 lambda do |payload|
                   expect(payload[:method]).to eq('start_round')
+                  expect(payload[:effect]).to eq('used_health_potion')
   
                   player_1 = payload[:data][:player_1]  
                   
@@ -664,6 +666,7 @@ RSpec.describe ::GameChannel, type: :channel do
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
+                expect(payload[:effect]).to eq('skipped_attack')
 
                 player_1 = payload[:data][:player_1]
 
@@ -711,6 +714,7 @@ RSpec.describe ::GameChannel, type: :channel do
             .with(
               lambda do |payload|
                 expect(payload[:method]).to eq('start_round')
+                expect(payload[:effect]).to eq('skipped_attack')
 
                 player_1 = payload[:data][:player_1]
 
@@ -916,13 +920,14 @@ RSpec.describe ::GameChannel, type: :channel do
         end
 
         it 'notifies that match finished' do
-          winner = defending_player_id == current_user.id ? second_player_nickname : current_user_nickname
+          winner = defending_player_id == current_user.id ? second_player : current_user
+          winner_nickname = winner == current_user ? current_user_nickname : second_player_nickname
 
           expect { defend }
             .to have_broadcasted_to("notifications_#{current_user.id}")
-            .with(method: 'match_finished', data: { winner: winner })
+            .with(method: 'match_finished', effect: winner == current_user ? 'won' : 'loose', data: { winner: winner_nickname })
             .and have_broadcasted_to("notifications_#{second_player.id}")
-            .with(method: 'match_finished', data: { winner: winner })
+            .with(method: 'match_finished', effect: winner == second_player ? 'won' : 'loose', data: { winner: winner_nickname })
         end
       end
 
@@ -937,12 +942,43 @@ RSpec.describe ::GameChannel, type: :channel do
         end
       end
 
+      context 'when player defends all damage' do
+        let!(:defending_player_cards) { armors.last(5) }
+        let!(:cards_used_in_defense_turn) { defending_player_cards.pluck(:id) }
+        let!(:valid_used_cards) { defending_player_cards.map { |c| ::Card::Serializer.call(c) } }
+
+        it 'returns match state to players' do
+          expect { defend }
+            .to have_broadcasted_to("notifications_#{current_user.id}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('end_defense_turn')
+                expect(payload[:effect]).to eq('defended')
+  
+                expect(payload[:data][:player_1][:health]).to eq(::Player::INITIAL_HEALTH)
+                expect(payload[:data][:player_2][:health]).to eq(::Player::INITIAL_HEALTH)
+              end
+            )
+            .and have_broadcasted_to("notifications_#{second_player.id}")
+            .with(
+              lambda do |payload|
+                expect(payload[:method]).to eq('end_defense_turn')
+                expect(payload[:effect]).to eq('defended')
+  
+                expect(payload[:data][:player_1][:health]).to eq(::Player::INITIAL_HEALTH)
+                expect(payload[:data][:player_2][:health]).to eq(::Player::INITIAL_HEALTH)
+              end
+            )
+        end
+      end
+
       it 'returns match state to player one' do
         expect { defend }
           .to have_broadcasted_to("notifications_#{current_user.id}")
           .with(
             lambda do |payload|
               expect(payload[:method]).to eq('end_defense_turn')
+              expect(payload[:effect]).to eq('attacked')
 
               player_1 = payload[:data][:player_1]
 
@@ -994,6 +1030,7 @@ RSpec.describe ::GameChannel, type: :channel do
           .with(
             lambda do |payload|
               expect(payload[:method]).to eq('end_defense_turn')
+              expect(payload[:effect]).to eq('attacked')
 
               player_1 = payload[:data][:player_1]
 
